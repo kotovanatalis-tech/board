@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Speak&amp;Teach · Teacher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Caveat:wght@500;700&family=Unbounded:wght@300;400;500;600&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/static/app.css">
+<style>
+  /* Layout: groups and My boards on the left; the selected space with tabs on the right; a student opens in a side drawer */
+  .app{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100%}
+  .side{background:var(--panel);border-right:1px solid var(--line);padding:16px 12px;display:flex;flex-direction:column;gap:12px}
+  .brand{font-weight:600;font-size:15px;padding:0 6px}
+  .glist{display:flex;flex-direction:column;gap:1px}
+  .gbtn{display:flex;align-items:center;gap:8px;text-align:left;background:none;border:none;border-radius:7px;padding:7px 8px;cursor:pointer;font-size:13px}
+  .gbtn:hover{background:var(--soft)}
+  .gbtn.cur{background:var(--soft);font-weight:600}
+  .gbtn .gn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .gbtn .gc{font-size:11px;font-variant-numeric:tabular-nums;color:var(--muted)}
+  .newg{display:flex;gap:6px}
+  .newg input{flex:1;font-size:13px}
+  .sidefoot{margin-top:auto;display:flex;flex-direction:column;gap:6px;font-size:12px;padding:0 6px}
+  .sidefoot details summary{cursor:pointer;color:var(--muted)}
+  .sidefoot form{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+  main{padding:24px 28px 60px;min-width:0}
+  .gh{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .gh h1{font-size:22px;overflow-wrap:anywhere}
+  .gh .acts{margin-left:auto;display:flex;gap:6px}
+  .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:18px;overflow-x:auto}
+  .tab{background:none;border:none;border-bottom:2px solid transparent;padding:8px 12px;cursor:pointer;color:var(--muted);font-weight:500;white-space:nowrap;font-size:13px}
+  .tab.cur{color:var(--ink);border-bottom-color:var(--ink)}
+  .tab .n{font-size:11px;background:var(--okbg);color:var(--ok);border-radius:999px;padding:1px 7px;margin-left:5px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .row input{flex:1 1 180px}
+  .row input[type=checkbox]{flex:none}
+  .stack{display:flex;flex-direction:column;gap:12px}
+  .hint{font-size:12px;color:var(--muted);max-width:72ch;margin:0}
+  .empty{border:1px dashed var(--line);border-radius:10px;padding:26px 20px;text-align:center;color:var(--muted)}
+  .lfoot{display:flex;flex-wrap:wrap;gap:6px;padding-top:6px}
+  .copyrow{flex-basis:100%}
+  .copyrow select{flex:1 1 220px}
+  .livebar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+  .livebar select{flex:1 1 240px;max-width:460px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+  .card{display:flex;flex-direction:column;gap:6px;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 13px;cursor:pointer;min-width:0;font-size:13px}
+  .card:hover{border-color:var(--muted)}
+  .card.off{opacity:.6}
+  .card.sel{border-color:var(--sel);box-shadow:0 0 0 1px var(--sel)}
+  .ctop{display:flex;align-items:center;gap:8px}
+  .ctop b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;font-size:14px}
+  .cex{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bar{height:5px;border-radius:3px;background:var(--soft);overflow:hidden;display:flex}
+  .bar i{display:block;height:100%}
+  .bar .b-ok{background:var(--ok)} .bar .b-bad{background:var(--bad)} .bar .b-fill{background:var(--mustard)}
+  .cnums{font-variant-numeric:tabular-nums;display:flex;gap:10px;flex-wrap:wrap}
+  .cnums .g{color:var(--ok)} .cnums .r{color:var(--bad)}
+  .cact{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pos{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+  .pos .track{flex:1;height:3px;background:var(--soft);border-radius:2px;position:relative}
+  .pos .track i{position:absolute;top:-3px;width:9px;height:9px;border-radius:50%;background:var(--ink);transform:translateX(-50%)}
+  .tablewrap{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+  th{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  td .row{flex-wrap:nowrap}
+  .cred{background:var(--okbg);border-radius:10px;padding:12px 14px;font-size:13px;display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+  .cred pre{margin:0;font:inherit;white-space:pre-wrap;flex:1;min-width:200px}
+  .libgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+  .libcard{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
+  .libcard h3{font-size:15px;overflow-wrap:anywhere}
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:min(520px,100vw);background:var(--panel);border-left:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;z-index:20;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .dh{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
+  .dh h2{font-size:17px;flex:1;min-width:0;overflow-wrap:anywhere}
+  .dbody{overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:18px;flex:1}
+  .dsec{display:flex;flex-direction:column;gap:8px}
+  .anslist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+  .anslist li{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:8px;padding:7px 0;border-top:1px solid var(--soft);font-size:13px}
+  .anslist li.here{background:color-mix(in srgb,var(--mustard) 14%,transparent)}
+  .anslist .no{color:var(--muted);font-variant-numeric:tabular-nums}
+  .anslist .ctx{color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+  .anslist .v{font-weight:600;overflow-wrap:anywhere}
+  .anslist .v.e{font-weight:400;color:var(--idle)}
+  .mark{font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;align-self:start}
+  .mark.ok{background:var(--okbg);color:var(--ok)} .mark.bad{background:var(--badbg);color:var(--bad)}
+  .log{list-style:none;margin:0;padding:0;font-size:12px;display:flex;flex-direction:column;gap:3px;max-height:150px;overflow-y:auto}
+  .log time{color:var(--muted);font-variant-numeric:tabular-nums;margin-right:6px}
+  #dNotes{display:flex;min-height:240px}
+  .gc.req{background:#C2412D;color:#fff;border-radius:999px;padding:1px 7px}
+  .crumbs{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:13px}
+  .crumbs button{background:none;border:none;padding:3px 6px;border-radius:6px;cursor:pointer;color:var(--muted);font:inherit}
+  .crumbs button:hover{background:var(--soft)}
+  .crumbs button.cur{color:var(--ink);font-weight:600}
+  .fcard{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer}
+  .fcard:hover{border-color:var(--ink)}
+  .fcard .fi{width:22px;height:22px;flex:none;stroke:var(--muted);fill:none;stroke-width:1.6}
+  .fcard b{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:500}
+  .fcard .row{flex-wrap:nowrap}
+  .libcard .meta{font-size:12px;color:var(--muted)}
+  .reqrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .reqrow .nm{flex:1;min-width:180px}
+  .modal{position:fixed;inset:0;background:rgba(20,20,18,.35);display:grid;place-items:center;z-index:40;padding:16px}
+  .modal .mbox{background:var(--panel);border-radius:14px;box-shadow:var(--shadow);width:min(460px,100%);max-height:86vh;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:12px}
+  .modal .chk{display:flex;gap:8px;align-items:center;font-size:14px;padding:3px 0}
+  .tgqr{width:150px;height:150px;border:1px solid var(--line);border-radius:10px;padding:6px;background:#fff}
+  .tgqr svg{width:100%;height:100%;display:block}
+  .jt td,.jt th{white-space:nowrap}
+  .jt td.att{text-align:center;cursor:pointer;user-select:none;font-weight:600}
+  .jt td.att:hover{background:var(--soft)}
+  .att-p{color:var(--ok)} .att-a{color:var(--muted)} .att-ac{color:var(--bad)}
+  .bal{font-weight:700;font-variant-numeric:tabular-nums}
+  .bal.low{color:#B7791F} .bal.neg{color:var(--bad)}
+  .jt input.num{width:70px}
+  .jnew{border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--panel)}
+  .jatt{display:flex;flex-wrap:wrap;gap:8px}
+  .jatt label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:13px}
+  .jatt select{font-size:12px;padding:3px 4px}
+  @media (max-width:820px){
+    .app{grid-template-columns:1fr}
+    .side{border-right:none;border-bottom:1px solid var(--line)}
+    .glist{flex-direction:row;flex-wrap:wrap}
+    .sidefoot{flex-direction:row;flex-wrap:wrap;align-items:center}
+    main{padding:18px 16px 60px}
+  }
+
+  .side{background:var(--grain),linear-gradient(170deg,#E3E4CF 0%,#F2EAD2 55%,#F8DC8F 100%)!important;border-right:none!important}
+  .brand{font-family:var(--display);font-weight:500;font-size:19px;letter-spacing:-.03em}
+  .gbtn{border-radius:14px}
+  .gbtn.cur{background:rgba(255,253,247,.75)!important;box-shadow:0 8px 20px -14px rgba(120,95,30,.6)}
+  .newg input{background:rgba(255,255,255,.7)}
+  .gh h1{font-family:var(--display);font-weight:500;letter-spacing:-.03em}
+  .tab.cur{border-bottom:2px solid;border-image:var(--leak) 1;color:var(--ink)}
+  .card,.libcard,.fcard,.reqrow{border-radius:18px!important;box-shadow:var(--shadow)}
+  .card:hover,.libcard:hover,.fcard:hover{background:linear-gradient(var(--panel),var(--panel)) padding-box,var(--leak) border-box!important;border-color:transparent!important}
+  .libcard h3{font-family:var(--display);font-weight:500;font-size:15px}
+  .fcard{flex-wrap:wrap}
+  .fcard b{flex:1 1 140px;font-family:var(--display);font-weight:500;font-size:15px}
+  .fcard .row{flex-basis:100%;justify-content:flex-start;gap:2px;margin-left:24px}
+  .modal .mbox{border-radius:22px}
+  .modal .mbox h2{font-family:var(--display);font-weight:500}
+  .modal label.small{display:flex;flex-direction:column;gap:5px}
+  .modal input:not([type=checkbox]),.modal select{width:100%}
+  .gh h1{font-weight:300!important}
+  .side .brand{width:170px;padding:0 6px}
+  .libcard h3,.fcard b,.modal .mbox h2{font-weight:400!important}
+  .lnkqr{align-self:center;width:180px;height:180px;padding:8px;background:#fff;border-radius:14px;border:1px solid var(--line)}
+  .lnkqr svg{width:100%;height:100%;display:block}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand" aria-label="Speak&amp;Teach"><span data-logo="1"></span></div>
+    <nav class="glist"><button class="gbtn" id="libBtn" type="button"><span class="gn">My boards</span><span class="gc" id="libCount"></span></button>
+      <button class="gbtn" id="reqBtn" type="button" hidden><span class="gn">Requests</span><span class="gc req" id="reqCount"></span></button></nav>
+    <div class="label" style="padding:0 6px">Groups</div>
+    <nav class="glist" id="glist"></nav>
+    <form class="newg" id="newGroup">
+      <input id="newGroupName" placeholder="New group" aria-label="New group name" maxlength="80">
+      <button class="btn sm" type="submit">Add</button>
+    </form>
+    <div class="sidefoot">
+      <span class="muted" id="who"></span>
+      <button class="btn ghost sm" id="tgSetBtn" type="button" style="justify-content:flex-start;padding-left:0">Telegram sign-in</button>
+      <button class="btn ghost sm" id="moveBtn" type="button" style="justify-content:flex-start;padding-left:0">Full backup / move server</button>
+      <details>
+        <summary>Change password</summary>
+        <form id="pwForm">
+          <input id="pwOld" type="password" placeholder="Current password" autocomplete="current-password">
+          <input id="pwNew" type="password" placeholder="New password" autocomplete="new-password">
+          <button class="btn sm" type="submit">Save</button>
+        </form>
+      </details>
+      <button class="btn ghost sm" id="logout" type="button" style="justify-content:flex-start;padding-left:0">Sign out</button>
+    </div>
+  </aside>
+  <main id="main"></main>
+</div>
+<aside class="drawer" id="drawer" hidden aria-label="Student"></aside>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/static/common.js"></script>
+<script>
+var S = null, cur = null, tab = 'boards', view = 'group';
+var presence = {}, drafts = {}, openLessons = {}, cred = null;
+var D = { sid: null, exId: null, follow: true, data: null }, dNotes = null;
+try { cur = localStorage.getItem('klass.group'); tab = localStorage.getItem('klass.tab') || 'live'; view = localStorage.getItem('klass.view') || 'group'; } catch (e) {}
+var socket = io();
+
+async function load() {
+  S = await api('GET', '/api/t/state');
+  if (S.guestOnly) { var tb = document.getElementById('tgSetBtn'); if (tb) tb.hidden = true; }
+  S.presence.forEach(function (p) { presence[p.studentId] = p; });
+  if (!S.groups.some(function (g) { return g.id === cur; })) cur = S.groups[0] ? S.groups[0].id : null;
+  if (!cur && view === 'group' && S.library.length) view = 'lib';
+  render();
+}
+function G() { return S.groups.find(function (g) { return g.id === cur; }); }
+function exTitle(id) { var e = S.exercises[id]; return e ? e.title : 'task'; }
+function groupExercises(g) { var out = []; g.lessonIds.forEach(function (lid) { var l = S.lessons[lid]; if (l) l.exerciseIds.forEach(function (eid) { if (S.exercises[eid]) out.push({ ex: S.exercises[eid], lesson: l }); }); }); return out; }
+function onlineCount(g) { return g.studentIds.filter(function (id) { return presence[id] && presence[id].online; }).length; }
+function stateOf(id) { var p = presence[id]; if (!p || !p.online) return 'off'; return p.visible ? 'on' : 'away'; }
+function stateText(id) { var s = stateOf(id), st = S.students[id]; if (s === 'on') return 'online'; if (s === 'away') return 'tab in background'; return 'offline · ' + ago(st && st.lastSeen); }
+function remember() { try { localStorage.setItem('klass.group', cur || ''); localStorage.setItem('klass.tab', tab); localStorage.setItem('klass.view', view); } catch (e) {} }
+function plural(n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); }
+
+function render() { $('#who').textContent = 'Signed in as ' + S.teacher.login; renderSide(); renderMain(); }
+function pendingList() { return Object.values(S.students).filter(function (s) { return s.status === 'pending'; }).sort(function (a, b) { return a.createdAt - b.createdAt; }); }
+function approved() { return Object.values(S.students).filter(function (s) { return s.status !== 'pending'; }).sort(function (a, b) { return a.name.localeCompare(b.name); }); }
+function renderReq() {
+  var list = pendingList();
+  var h = '<div class="gh"><div><div class="label">Telegram sign-in</div><h1>Requests</h1></div></div><div class="stack"><p class="hint">Students who signed in with Telegram and wrote their name. Approve them and, if you like, put them into a group straight away. You can also approve from Telegram — the bot sends you a message with buttons.</p>';
+  if (!list.length) h += '<div class="empty">No new requests.</div>';
+  list.forEach(function (st) {
+    h += '<div class="reqrow" data-st="' + st.id + '"><div class="nm"><b>' + esc(st.name) + '</b><div class="small muted">' + (st.tg ? (/^id /.test(st.tg) ? 'Telegram ' + esc(st.tg) : '@' + esc(st.tg)) + ' · ' : '') + ago(st.createdAt) + '</div></div>' +
+      '<select aria-label="Group"><option value="">No group yet</option>' + S.groups.map(function (g) { return '<option value="' + g.id + '">' + esc(g.name) + '</option>'; }).join('') + '</select>' +
+      '<button class="btn sm primary" data-a="approve" type="button">Approve</button><button class="btn sm ghost danger" data-a="reject" type="button">Decline</button></div>';
+  });
+  $('#main').innerHTML = h + '</div>';
+}
+function renderSide() {
+  $('#libBtn').classList.toggle('cur', view === 'lib'); $('#libCount').textContent = S.library.length || '';
+  var np = pendingList().length; $('#reqBtn').hidden = !np && view !== 'req'; $('#reqBtn').classList.toggle('cur', view === 'req'); $('#reqCount').textContent = np || '';
+  $('#glist').innerHTML = S.groups.length ? S.groups.map(function (g) {
+    var on = onlineCount(g);
+    return '<button class="gbtn' + (view === 'group' && g.id === cur ? ' cur' : '') + '" data-g="' + g.id + '" type="button"><span class="dot' + (on ? ' on' : '') + '"></span><span class="gn">' + esc(g.name) + '</span><span class="gc">' + on + '/' + g.studentIds.length + '</span></button>';
+  }).join('') : '<span class="muted small" style="padding:0 8px">No groups yet</span>';
+}
+function renderMain() {
+  var m = $('#main');
+  if (view === 'lib') return renderLib();
+  if (view === 'req') return renderReq();
+  var g = G();
+  if (!g) { m.innerHTML = '<div class="empty"><h2 style="font-size:17px">Create your first group</h2><p>Type a name on the left, e.g. “B1 evening” or “Anna 1:1”. Each group has its own students and lessons.</p></div>'; return; }
+  var on = onlineCount(g);
+  m.innerHTML = '<div class="gh"><div><div class="label">Group</div><h1>' + esc(g.name) + '</h1></div>' +
+    '<div class="acts"><button class="btn sm" data-a="renameGroup" type="button">Rename</button><button class="btn sm danger" data-a="deleteGroup" type="button">Delete group</button></div></div>' +
+    '<div class="tabs" role="tablist">' + tabBtn('boards', 'Boards' + (on ? '<span class="n">' + on + ' online</span>' : '')) + tabBtn('students', 'Students · ' + g.studentIds.length) + tabBtn('journal', 'Journal') + '</div><section id="tabBody"></section>';
+  renderTab();
+}
+function tabBtn(id, label) { return '<button class="tab' + (tab === id ? ' cur' : '') + '" data-tab="' + id + '" role="tab" type="button">' + label + '</button>'; }
+function renderTab() { var b = $('#tabBody'); if (!b) return; if (tab !== 'students' && tab !== 'journal') tab = 'boards'; b.innerHTML = tab === 'students' ? studentsHtml() : tab === 'journal' ? '<div id="jBody"><p class="muted">Loading…</p></div>' : boardsHtml(); if (tab === 'journal') loadJournal(); }
+
+/* journal: lesson balance and attendance */
+var J = null, Jg = null;
+function today() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+async function loadJournal() { var g = G(); if (!g) return; try { var j = await api('GET', '/api/t/groups/' + g.id + '/journal'); if (G() && G().id === g.id) { J = j; Jg = g.id; renderJournal(); } } catch (e) { toast(e.message); } }
+async function saveJournal() { var gid = Jg; try { J = await api('PUT', '/api/t/groups/' + gid + '/journal', J); if (Jg === gid) renderJournal(); } catch (e) { toast(e.message); } }
+function used(r) { return J.entries.reduce(function (a, e) { return a + (e.att[r.id] === 'p' || e.att[r.id] === 'ac' ? 1 : 0); }, 0); }
+function topped(r) { return r.topups.reduce(function (a, t) { return a + t.n; }, 0); }
+function balance(r) { return Math.round((r.start + topped(r) - used(r)) * 100) / 100; }
+function fmtDate(d) { if (!d) return ''; var p = d.split('-'); return p.length === 3 ? p[2] + '.' + p[1] + '.' + p[0].slice(2) : d; }
+var ATT = { p: ['✓', 'was there — 1 lesson charged'], a: ['✗', 'absent — not charged'], ac: ['✗ ₽', 'absent — charged anyway'] };
+function renderJournal() {
+  var b = $('#jBody'); if (!b || !J) return;
+  var g = G(), inJ = J.rows.map(function (r) { return r.sid; }), missing = g.studentIds.filter(function (id) { return S.students[id] && inJ.indexOf(id) < 0; });
+  var h = '<div class="stack"><p class="hint">Write each student’s balance (lessons paid) once. After every lesson add the topic and mark who was there — one lesson is taken from everyone marked present. Click a mark in the history to change it; balances recalculate.</p>';
+  h += '<div class="tablewrap"><table class="jt"><thead><tr><th>Name</th><th>Start balance</th><th>Topped up</th><th>Attended</th><th>Lessons left</th><th></th></tr></thead><tbody>' +
+    (J.rows.length ? J.rows.map(function (r) {
+      var bl = balance(r);
+      return '<tr data-r="' + r.id + '"><td>' + esc(r.name) + '</td><td><input class="num" type="number" step="1" value="' + r.start + '" data-j="start" aria-label="Start balance"></td><td>' + (topped(r) ? '+' + topped(r) : '—') + '</td><td>' + used(r) + '</td><td><span class="bal' + (bl < 0 ? ' neg' : bl <= 1 ? ' low' : '') + '">' + bl + '</span></td>' +
+        '<td><span class="row" style="justify-content:flex-end"><button class="btn sm" data-a="jTop" type="button">+ Lessons paid</button><button class="btn sm ghost" data-a="jRen" type="button">Rename</button><button class="btn sm ghost danger" data-a="jDel" type="button">Remove</button></span></td></tr>';
+    }).join('') : '<tr><td colspan="6" class="muted">Nobody in the journal yet.</td></tr>') + '</tbody></table></div>';
+  h += '<form class="row" id="jAdd">' + (missing.length ? '<button class="btn" data-a="jAddAll" type="button">Add group students (' + missing.length + ')</button>' : '') + '<input id="jName" placeholder="Or type a name" maxlength="80"><input id="jStart" type="number" step="1" placeholder="Balance" style="width:100px"><button class="btn" type="submit">Add</button></form>';
+  if (J.rows.length) {
+    h += '<div class="jnew"><div class="label">After the lesson</div><div class="row"><input type="date" id="jDate" value="' + today() + '" style="width:auto"><input id="jTopic" placeholder="Topic, e.g. Lesson 7. Is being kind killing you?" maxlength="300" style="flex:1;min-width:220px"></div>' +
+      '<div class="jatt">' + J.rows.map(function (r) { return '<label>' + esc(r.name) + '<select data-ja="' + r.id + '"><option value="p">was there</option><option value="a">absent</option><option value="ac">absent, charge</option></select></label>'; }).join('') + '</div>' +
+      '<div class="row"><button class="btn primary" data-a="jEntry" type="button">Save lesson and charge</button></div></div>';
+    if (J.entries.length) {
+      var es = J.entries.slice().sort(function (a, c) { return (c.date || '').localeCompare(a.date || ''); });
+      h += '<div class="label">History · ' + plural(J.entries.length, 'lesson') + '</div><div class="tablewrap"><table class="jt"><thead><tr><th>Date</th><th>Topic</th>' + J.rows.map(function (r) { return '<th>' + esc(r.name.split(' ')[0]) + '</th>'; }).join('') + '<th></th></tr></thead><tbody>' +
+        es.map(function (e) {
+          return '<tr data-en="' + e.id + '"><td>' + esc(fmtDate(e.date)) + '</td><td style="white-space:normal;min-width:180px">' + esc(e.topic || '—') + '</td>' + J.rows.map(function (r) { var a = e.att[r.id] || ''; return '<td class="att ' + (a ? 'att-' + a : '') + '" data-cell="' + r.id + '" title="' + (a ? ATT[a][1] : 'not in this lesson') + ' — click to change">' + (a ? ATT[a][0] : '·') + '</td>'; }).join('') +
+            '<td><span class="row" style="justify-content:flex-end"><button class="btn sm ghost" data-a="jEdit" type="button">Edit topic</button><button class="btn sm ghost danger" data-a="jEDel" type="button">Delete</button></span></td></tr>';
+        }).join('') + '</tbody></table></div><p class="hint">✓ was there (charged) · ✗ absent (not charged) · ✗ ₽ absent but charged · · not counted</p>';
+    }
+  }
+  b.innerHTML = h + '</div>';
+}
+document.addEventListener('click', function (e) {
+  if (!J || tab !== 'journal') return;
+  var a = e.target.closest('[data-a]'), act = a && a.dataset.a, tr = e.target.closest('tr[data-r]'), row = tr && J.rows.find(function (r) { return r.id === tr.dataset.r; });
+  var cell = e.target.closest('td[data-cell]');
+  if (cell) { var en = J.entries.find(function (x) { return x.id === cell.closest('tr').dataset.en; }); var order = ['p', 'a', 'ac', '']; var c = en.att[cell.dataset.cell] || ''; var nx = order[(order.indexOf(c) + 1) % order.length]; if (nx) en.att[cell.dataset.cell] = nx; else delete en.att[cell.dataset.cell]; saveJournal(); return; }
+  if (!act || act.indexOf('j') !== 0) return;
+  var g = G();
+  if (act === 'jAddAll') { g.studentIds.forEach(function (id) { if (S.students[id] && !J.rows.some(function (r) { return r.sid === id; })) J.rows.push({ id: Math.random().toString(36).slice(2, 10), name: S.students[id].name, sid: id, start: 0, topups: [] }); }); saveJournal(); }
+  else if (act === 'jTop' && row) { var n = Number(prompt('How many lessons did ' + row.name + ' pay for?', '8')); if (n) { row.topups.push({ at: Date.now(), n: n }); saveJournal(); } }
+  else if (act === 'jRen' && row) { var nm = prompt('Name', row.name); if (nm && nm.trim()) { row.name = nm.trim(); saveJournal(); } }
+  else if (act === 'jDel' && row) { if (confirm('Remove ' + row.name + ' from the journal? Their marks are deleted too.')) { J.rows = J.rows.filter(function (r) { return r !== row; }); J.entries.forEach(function (x) { delete x.att[row.id]; }); saveJournal(); } }
+  else if (act === 'jEntry') {
+    var att = {}; $$('[data-ja]').forEach(function (s2) { att[s2.dataset.ja] = s2.value; });
+    var topic = $('#jTopic').value.trim(); if (!topic && !confirm('Save without a topic?')) return;
+    J.entries.push({ id: Math.random().toString(36).slice(2, 10), date: $('#jDate').value || today(), topic: topic, att: att });
+    var charged = Object.keys(att).filter(function (k) { return att[k] !== 'a'; }).length;
+    saveJournal().then(function () { toast('Saved. Charged 1 lesson from ' + plural(charged, 'student')); });
+  }
+  else if (act === 'jEdit') { var en2 = J.entries.find(function (x) { return x.id === a.closest('tr').dataset.en; }); var t = prompt('Topic', en2.topic); if (t != null) { en2.topic = t.trim(); var d = prompt('Date (YYYY-MM-DD)', en2.date); if (d) en2.date = d; saveJournal(); } }
+  else if (act === 'jEDel') { var id = a.closest('tr').dataset.en; if (confirm('Delete this lesson? Charged lessons go back to the balances.')) { J.entries = J.entries.filter(function (x) { return x.id !== id; }); saveJournal(); } }
+});
+document.addEventListener('change', function (e) {
+  if (!J || tab !== 'journal' || e.target.dataset.j !== 'start') return;
+  var row = J.rows.find(function (r) { return r.id === e.target.closest('tr').dataset.r; }); if (!row) return;
+  row.start = Number(e.target.value) || 0; saveJournal();
+});
+document.addEventListener('submit', function (e) {
+  if (e.target.id !== 'jAdd' || !J) return;
+  var nm = $('#jName').value.trim(); if (!nm) return;
+  J.rows.push({ id: Math.random().toString(36).slice(2, 10), name: nm, sid: null, start: Number($('#jStart').value) || 0, topups: [] }); saveJournal();
+});
+
+/* My boards */
+function lessonOptions(withLib) {
+  var o = withLib ? '<option value="__lib">My boards</option>' : '';
+  S.groups.forEach(function (g) { g.lessonIds.forEach(function (lid) { var L = S.lessons[lid]; if (L) o += '<option value="' + lid + '">' + esc(g.name + ' — ' + L.title) + '</option>'; }); });
+  return o;
+}
+var folder = null;
+try { folder = localStorage.getItem('klass.folder') || null; } catch (e) {}
+var FI = '<svg class="fi" viewBox="0 0 24 24"><path d="M3 6.5A1.5 1.5 0 014.5 5h4.2l2 2h8.8A1.5 1.5 0 0121 8.5v9a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 17.5z"/></svg>';
+function folderPath(id) { var out = []; while (id && S.folders[id]) { out.unshift(S.folders[id]); id = S.folders[id].parentId; } return out; }
+function folderOptions(skip) {
+  var o = '<option value="">My boards (top level)</option>';
+  (function walk(pid, depth) { Object.values(S.folders).filter(function (f) { return (f.parentId || null) === pid && f.id !== skip; }).sort(function (a, b) { return a.name.localeCompare(b.name); }).forEach(function (f) { o += '<option value="' + f.id + '">' + '— '.repeat(depth) + esc(f.name) + '</option>'; walk(f.id, depth + 1); }); })(null, 1);
+  return o;
+}
+function renderLib() {
+  if (folder && !S.folders[folder]) folder = null;
+  var subs = Object.values(S.folders).filter(function (f) { return (f.parentId || null) === folder; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
+  var boardsHere = S.library.filter(function (id) { var e = S.exercises[id]; return e && (e.folderId || null) === folder; });
+  var h = '<div class="gh"><div><div class="label">Private</div><h1>My boards</h1></div></div>' +
+    '<div class="stack"><div class="crumbs"><button type="button" data-fold=""' + (!folder ? ' class="cur"' : '') + '>My boards</button>' + folderPath(folder).map(function (f) { return '<span class="muted">/</span><button type="button" data-fold="' + f.id + '"' + (f.id === folder ? ' class="cur"' : '') + '>' + esc(f.name) + '</button>'; }).join('') + '</div>' +
+    '<form class="row" id="newLib"><input id="newLibTitle" placeholder="Board name, e.g. “Lesson 7 — Kindness”" maxlength="120"><label class="btn">Cover photo<input type="file" accept="image/*" id="newLibCover"></label><span class="small muted" id="newLibCoverName"></span><button class="btn primary" type="submit">New board</button><button class="btn" data-a="newFolder" type="button">New folder</button><button class="btn" data-a="miro" type="button">Import from Miro</button><label class="btn">Upload board (.json)<input type="file" accept=".json,application/json" id="libImport"></label></form>' +
+    '<p class="hint">Your own boards. Keep them in folders, open a board for chosen students with <b>Share</b>, or copy it to a group lesson.</p>';
+  if (subs.length) h += '<div class="libgrid">' + subs.map(function (f) {
+    var n = S.library.filter(function (id) { return S.exercises[id] && S.exercises[id].folderId === f.id; }).length + Object.values(S.folders).filter(function (x) { return x.parentId === f.id; }).length;
+    return '<div class="fcard" data-folder="' + f.id + '">' + FI + '<b>' + esc(f.name) + '</b><span class="small muted">' + n + '</span><span class="row"><button class="btn sm ghost" data-a="renFolder" type="button">Rename</button><button class="btn sm ghost" data-a="movFolder" type="button">Move</button><button class="btn sm ghost danger" data-a="delFolder" type="button">Delete</button></span></div>';
+  }).join('') + '</div>';
+  if (!subs.length && !boardsHere.length) h += '<div class="empty">' + (folder ? 'This folder is empty.' : 'No boards yet.') + '</div>';
+  if (boardsHere.length) h += '<div class="bgrid">' + boardsHere.map(function (id) {
+    var e = S.exercises[id]; var acc = (e.access || []).filter(function (x) { return S.students[x]; });
+    return boardCard(e, '/b/' + id, '<button class="btn sm" data-a="share" type="button" title="' + esc(acc.length ? 'Open for: ' + acc.map(function (x) { return S.students[x].name; }).join(', ') : 'Only you') + '">' + (acc.length ? 'Shared · ' + acc.length : 'Share') + '</button>' + boardMenu('<button class="btn sm" data-a="moveEx" type="button">Move to folder</button><button class="btn sm" data-a="copyEx" type="button">Copy to a lesson…</button>'), true);
+  }).join('') + '</div>';
+  $('#main').innerHTML = h + '</div>';
+}
+function boardMenu(extra) {
+  return '<details class="bmore"><summary aria-label="More">•••</summary><div class="menu"><label class="btn sm">Change cover photo<input type="file" accept="image/*" data-a="coverEx"></label><button class="btn sm" data-a="noCover" type="button">Remove cover</button><button class="btn sm" data-a="renameEx" type="button">Rename</button>' + extra + '<button class="btn sm danger" data-a="deleteEx" type="button">Delete</button></div></details>';
+}
+function modal(html, onClick) {
+  var m = document.createElement('div'); m.className = 'modal'; m.innerHTML = '<div class="mbox">' + html + '</div>';
+  document.body.appendChild(m);
+  m.addEventListener('click', function (e) { if (e.target === m || e.target.closest('[data-m=close]')) { m.remove(); return; } if (onClick) onClick(e, m); });
+  return m;
+}
+function shareDialog(eid) {
+  var e = S.exercises[eid], acc = e.access || [], list = approved();
+  modal('<h2 style="font-size:17px">Who can open “' + esc(e.title) + '”</h2>' + (list.length ? '<div>' + list.map(function (st) { return '<label class="chk"><input type="checkbox" value="' + st.id + '"' + (acc.indexOf(st.id) >= 0 ? ' checked' : '') + '> ' + esc(st.name) + '</label>'; }).join('') + '</div>' : '<p class="muted">No students yet.</p>') +
+    '<p class="hint">They see the board on their home page under “Shared with you”. Link: <code>' + esc(location.origin + '/b/' + eid) + '</code></p><div class="row"><button class="btn primary" data-m="save" type="button">Save</button><button class="btn" data-m="link" type="button">Copy link</button><button class="btn ghost" data-m="close" type="button">Cancel</button></div>',
+    async function (ev, m) {
+      var b = ev.target.closest('[data-m]'); if (!b) return;
+      if (b.dataset.m === 'link') { try { await navigator.clipboard.writeText(location.origin + '/b/' + eid); toast('Link copied'); } catch (err) {} return; }
+      if (b.dataset.m === 'save') { var ids = $$('input:checked', m).map(function (i) { return i.value; }); try { await api('PATCH', '/api/t/exercises/' + eid, { access: ids }); m.remove(); toast('Saved'); await load(); } catch (err) { toast(err.message); } }
+    });
+}
+function moveDialog(kind, id) {
+  modal('<h2 style="font-size:17px">Move to folder</h2><select id="mvSel">' + folderOptions(kind === 'folder' ? id : null) + '</select><div class="row"><button class="btn primary" data-m="go" type="button">Move</button><button class="btn ghost" data-m="close" type="button">Cancel</button></div>',
+    async function (ev, m) {
+      var b = ev.target.closest('[data-m=go]'); if (!b) return;
+      var to = $('#mvSel', m).value || null;
+      try { if (kind === 'folder') await api('PATCH', '/api/t/folders/' + id, { parentId: to }); else await api('PATCH', '/api/t/exercises/' + id, { folderId: to }); m.remove(); await load(); } catch (err) { toast(err.message); }
+    });
+  var cur0 = kind === 'folder' ? S.folders[id].parentId : S.exercises[id].folderId; $('#mvSel').value = cur0 || '';
+}
+/* личная ссылка для входа */
+async function linkDialog(sid) {
+  var st = S.students[sid]; var L = await api('GET', '/api/t/students/' + sid + '/link');
+  var h = '<h2 style="font-size:17px">Login link · ' + esc(st.name) + '</h2>';
+  if (!L.on) h += '<p class="small">A personal link signs ' + esc(st.name.split(' ')[0]) + ' in straight away — no Telegram, no password. Send it in WhatsApp, by e-mail or show the QR code. It works until you turn it off, or until the student is no longer in any of your groups.</p><div class="row"><button class="btn primary" data-m="make" type="button">Create link</button><button class="btn ghost" data-m="close" type="button">Close</button></div>';
+  else h += '<div class="lnkqr">' + (L.qr || '') + '</div><div class="row"><input id="lnkUrl" readonly value="' + esc(L.url) + '" style="flex:1"><button class="btn primary" data-m="copy" type="button">Copy</button></div>' +
+    '<p class="small muted" style="margin:0">' + (L.used ? 'Last used ' + new Date(L.used).toLocaleString() : 'Not used yet') + '. Only send it to ' + esc(st.name.split(' ')[0]) + ' — anyone with this link gets into their account.</p>' +
+    '<div class="row"><button class="btn ghost" data-m="renew" type="button">Make a new link</button><button class="btn ghost danger" data-m="off" type="button">Turn off</button><button class="btn ghost" data-m="close" type="button">Close</button></div>';
+  modal(h, async function (ev, m) {
+    var b = ev.target.closest('[data-m]'); if (!b) return; var k = b.dataset.m;
+    try {
+      if (k === 'make') { await api('POST', '/api/t/students/' + sid + '/link', {}); m.remove(); await load(); linkDialog(sid); }
+      if (k === 'renew' && confirm('Make a new link? The old one stops working and ' + st.name + ' is signed out on devices where they used it.')) { await api('POST', '/api/t/students/' + sid + '/link', { renew: true }); m.remove(); linkDialog(sid); }
+      if (k === 'off' && confirm('Turn the link off? ' + st.name + ' is signed out on devices where they used it.')) { await api('DELETE', '/api/t/students/' + sid + '/link'); m.remove(); await load(); toast('Link turned off'); }
+      if (k === 'copy') { var u = $('#lnkUrl', m); try { await navigator.clipboard.writeText(u.value); } catch (e2) { u.select(); document.execCommand('copy'); } toast('Link copied'); }
+    } catch (err) { toast(err.message); }
+  });
+}
+async function tgDialog() {
+  var t = await api('GET', '/api/t/tg');
+  var h = '<h2 style="font-size:17px">Telegram sign-in</h2>';
+  if (!t.bot) h += '<p class="small">1. In Telegram open <b>@BotFather</b>, send <code>/newbot</code>, choose a name and a username ending in “bot”.<br>2. BotFather replies with a token like <code>123456:ABC…</code> — paste it here.</p>' + (t.error ? '<p class="small" style="color:var(--bad)">' + esc(t.error) + '</p>' : '') + '<input id="tgTok" placeholder="Bot token" autocomplete="off"><div class="row"><button class="btn primary" data-m="tok" type="button">Save</button><button class="btn ghost" data-m="close" type="button">Close</button></div>';
+  else {
+    h += '<p class="small">Bot: <b>@' + esc(t.bot) + '</b>. Students press “Sign in with Telegram” on the site, write their name, and you approve them (here under Requests, or with buttons in Telegram).</p>';
+    h += t.linked ? '<p class="small">Your Telegram is connected' + (t.tgUsername ? ' (@' + esc(t.tgUsername) + ')' : '') + ' — you can sign in with it and get new requests there.</p><div class="row"><button class="btn ghost" data-m="unlink" type="button">Disconnect my Telegram</button>' : '<p class="small">Connect your own Telegram to sign in with it and get new requests in the bot.</p><div class="row"><button class="btn primary" data-m="link" type="button">Connect my Telegram</button>';
+    h += (t.env ? '' : '<button class="btn ghost" data-m="untok" type="button">Remove bot</button>') + '<button class="btn ghost" data-m="close" type="button">Close</button></div><div id="tgLinkBox"></div>';
+  }
+  var poll = null;
+  var m = modal(h, async function (ev, mm) {
+    var b = ev.target.closest('[data-m]'); if (!b) return;
+    try {
+      if (b.dataset.m === 'tok' || b.dataset.m === 'untok') { await api('POST', '/api/t/tg/token', { token: b.dataset.m === 'tok' ? $('#tgTok', mm).value : '' }); mm.remove(); tgDialog(); }
+      if (b.dataset.m === 'unlink') { await api('POST', '/api/t/tg/unlink'); mm.remove(); tgDialog(); }
+      if (b.dataset.m === 'link') {
+        var r = await api('POST', '/api/tg/start', { purpose: 'link' });
+        $('#tgLinkBox', mm).innerHTML = '<div class="row" style="align-items:center"><div class="tgqr">' + (r.qr || '') + '</div><div class="stack" style="gap:8px"><a class="btn primary" href="' + esc(r.link) + '" target="_blank" rel="noopener">Open Telegram</a><span class="small muted">Press Start in the bot, then come back.</span></div></div>';
+        clearInterval(poll);
+        poll = setInterval(async function () { if (!document.body.contains(mm)) return clearInterval(poll); var p = await api('GET', '/api/tg/poll'); if (p.linked) { clearInterval(poll); toast('Telegram connected'); mm.remove(); tgDialog(); } else if (p.expired) clearInterval(poll); }, 2000);
+      }
+    } catch (err) { toast(err.message); }
+  });
+}
+async function miroDialog() {
+  var has = false, info = null; try { has = (await api('GET', '/api/t/miro/token')).has; } catch (e) {}
+  setTimeout(function () { var ml = document.getElementById('mLink'); if (ml) ml.focus(); }, 60);
+  var m = modal('<h2 style="font-size:17px">Import from Miro</h2>' +
+    '<label class="small muted">Link to the Miro board</label><div class="row" style="flex-wrap:nowrap"><input id="mLink" type="text" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://miro.com/app/board/…" style="flex:1"><button class="btn" data-m="paste" type="button">Paste</button></div>' +
+    '<details' + (has ? '' : ' open') + '><summary class="small">' + (has ? 'Miro token saved — change it' : 'Miro token (once)') + '</summary><p class="small">1. Open <b>miro.com/app/settings/user-profile/apps</b> → <b>Create new app</b>.<br>2. In the app settings tick the permission <b>boards:read</b>.<br>3. Press <b>Install app and get OAuth token</b>, choose the team with your board, copy the token.</p><input id="mTok" placeholder="Paste the token" autocomplete="off"></details>' +
+    '<div class="row"><button class="btn primary" data-m="load" type="button">Show frames</button><button class="btn" data-m="list" type="button">Pick from my Miro boards</button><button class="btn ghost" data-m="close" type="button">Close</button></div><div id="mBody"></div>',
+    async function (ev, mm) {
+      var b = ev.target.closest('[data-m]'); if (!b) return;
+      if (b.dataset.m === 'paste') { try { var tx = await navigator.clipboard.readText(); $('#mLink', mm).value = tx.trim(); } catch (e3) { $('#mLink', mm).focus(); toast('Press Cmd+V (Ctrl+V on Windows) to paste'); } return; }
+      var tok = ($('#mTok', mm) || {}).value || '';
+      try {
+        if (b.dataset.m === 'list' || b.dataset.m === 'search') {
+          $('#mBody', mm).innerHTML = '<p class="small muted">Loading your Miro boards…</p>';
+          var q = b.dataset.m === 'search' ? ($('#mQ', mm) || {}).value || '' : '';
+          var list = await api('POST', '/api/t/miro/boards', { token: tok, query: q });
+          $('#mBody', mm).innerHTML = '<div class="row"><input id="mQ" placeholder="Search by name" value="' + esc(q) + '"><button class="btn sm" data-m="search" type="button">Search</button></div>' +
+            (list.length ? '<div style="max-height:340px;overflow:auto;display:flex;flex-direction:column;gap:4px;margin-top:6px">' + list.map(function (x) { return '<button class="btn sm" style="justify-content:space-between;border-radius:12px" data-m="pick" data-link="' + esc(x.link) + '" type="button"><span style="overflow:hidden;text-overflow:ellipsis">' + esc(x.name) + '</span><span class="small muted">' + (x.modified ? new Date(x.modified).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '') + '</span></button>'; }).join('') + '</div>' : '<p class="small muted">This token sees no boards. Install the app into the team where your boards are.</p>');
+          var qi = $('#mQ', mm); if (qi) qi.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); $('[data-m=search]', mm).click(); } });
+          return;
+        }
+        if (b.dataset.m === 'pick') { $('#mLink', mm).value = b.dataset.link; b.dataset.m = 'load'; }
+        if (b.dataset.m === 'load') {
+          var lk = $('#mLink', mm).value.trim();
+          if (!lk) { try { lk = (await navigator.clipboard.readText()).trim(); $('#mLink', mm).value = lk; } catch (e4) {} }
+          if (!lk) { toast('Paste the link to the Miro board first — or press “Pick from my Miro boards”'); $('#mLink', mm).focus(); return; }
+          $('#mBody', mm).innerHTML = '<p class="small muted">Reading the board…</p>';
+          info = await api('POST', '/api/t/miro/frames', { link: $('#mLink', mm).value, token: tok });
+          $('#mBody', mm).innerHTML = '<p class="small"><b>' + esc(info.title) + '</b> · ' + plural(info.frames.length, 'frame') + '</p>' +
+            '<label class="chk"><input type="checkbox" id="mAll"> Select all</label><div style="max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:6px 10px">' +
+            info.frames.map(function (f) { return '<label class="chk"><input type="checkbox" value="' + f.id + '" data-mf="1"> ' + esc(f.title) + '</label>'; }).join('') + '</div>' +
+            '<label class="chk"><input type="checkbox" id="mSep" checked> A separate board for each frame (in a new folder) — best for big boards</label>' +
+            '<label class="small muted">Name (folder or board)<input id="mTitle" value="' + esc(info.title) + '"></label>' +
+            '<div class="row"><button class="btn primary" data-m="go" type="button">Import</button></div><div id="mProg"></div>';
+          $('#mAll', mm).onchange = function () { var on = this.checked; $$('[data-mf]', mm).forEach(function (c) { c.checked = on; }); };
+        }
+        if (b.dataset.m === 'go') {
+          var ids = $$('[data-mf]:checked', mm).map(function (c) { return c.value; });
+          if (!ids.length) { toast('Tick at least one frame'); return; }
+          var titles = {}; info.frames.forEach(function (f) { titles[f.id] = f.title; });
+          b.disabled = true;
+          var r = await api('POST', '/api/t/miro/import', { link: $('#mLink', mm).value, token: tok, frameIds: ids, titles: titles, separate: $('#mSep', mm).checked, title: $('#mTitle', mm).value, folderId: folder });
+          var t = setInterval(async function () {
+            var j; try { j = await api('GET', '/api/t/miro/job/' + r.job); } catch (err) { return; }
+            var pct = j.total ? Math.round(j.done / j.total * 100) : 0;
+            $('#mProg', mm).innerHTML = '<p class="small">' + esc(j.status === 'error' ? 'Error: ' + j.error : j.text) + '</p>' + (j.status === 'running' ? '<div class="bar"><i class="b-ok" style="width:' + pct + '%"></i></div>' : '');
+            if (j.status !== 'running') {
+              clearInterval(t); b.disabled = false;
+              if (j.status === 'done') {
+                $('#mProg', mm).innerHTML = '<p class="small">Imported ' + plural(j.boards.length, 'board') + ': ' + j.stats.items + ' items, ' + j.stats.images + ' images' + (j.stats.failedImages ? ' (' + j.stats.failedImages + ' images failed)' : '') + (j.stats.skipped ? ', ' + j.stats.skipped + ' items Miro does not share (emoji, flip cards, drawings…)' : '') + '.</p>' +
+                  j.boards.slice(0, 20).map(function (x) { return '<a class="btn sm" href="/b/' + x.id + '" target="_blank" rel="noopener">' + esc(x.title) + '</a>'; }).join(' ');
+                if (j.folderId) folder = j.folderId;
+                load();
+              }
+            }
+          }, 1500);
+        }
+      } catch (err) { $('#mBody', mm).innerHTML = '<p class="small" style="color:var(--bad)">' + esc(err.message) + '</p>'; }
+    });
+}
+$('#moveBtn').addEventListener('click', function () {
+  modal('<h2 style="font-size:17px">Full backup and moving to another server</h2>' +
+    '<p class="small">One file with everything: students, groups, boards, pictures, audio, notes, words, stars and settings.</p>' +
+    '<a class="btn primary" href="/api/t/export-all" download>Download full backup (.tar)</a>' +
+    '<p class="small"><b>Moving to a new server</b> (for example, a new Amvera project in the Moscow region):<br>1. Download the full backup here.<br>2. Upload the same platform files to the new project and open its address.<br>3. On the first screen choose “Restore from a full backup” and pick this file.<br>4. Check that everything is there, then stop and delete the old project — the Telegram bot works only on one server at a time.</p>' +
+    '<label class="small muted">Restore here from a backup — replaces everything on this server<input type="file" accept=".tar,application/x-tar" id="restoreIn"></label><div id="restoreMsg" class="small"></div>' +
+    '<div class="row"><button class="btn ghost" data-m="close" type="button">Close</button></div>');
+  $('#restoreIn').onchange = function () { var f = this.files[0]; if (f && confirm('Replace ALL data on this server with “' + f.name + '”?')) restoreAll(f, $('#restoreMsg')); };
+});
+async function restoreAll(f, msg) {
+  msg.textContent = 'Uploading ' + Math.round(f.size / 1048576) + ' MB… keep this page open.';
+  try {
+    var r = await fetch('/api/restore-all', { method: 'POST', headers: { 'Content-Type': 'application/x-tar' }, body: f, credentials: 'same-origin' });
+    var j = await r.json().catch(function () { return {}; });
+    if (!r.ok) throw new Error(j.error || 'Restore failed');
+    alert('Restored: ' + j.students + ' students, ' + j.boards + ' boards. Sign in with your usual teacher login.'); location.href = '/';
+  } catch (e) { msg.textContent = e.message; }
+}
+$('#tgSetBtn').addEventListener('click', function () { tgDialog().catch(function (e) { toast(e.message); }); });
+
+/* lessons */
+function lessonsHtml() {
+  var g = G();
+  var h = '<div class="stack"><form class="row" id="newLesson"><input id="newLessonTitle" placeholder="Lesson name, e.g. “Lesson 7. Is being kind killing you?”" maxlength="120"><button class="btn primary" type="submit">Add lesson</button></form>' +
+    '<p class="hint">Inside a lesson create boards (or copy them from My boards). Interactive HTML goes right onto a board: Widgets → Interactive HTML block.</p>';
+  if (!g.lessonIds.length) h += '<div class="empty">No lessons yet.</div>';
+  g.lessonIds.forEach(function (lid, li) {
+    var l = S.lessons[lid]; if (!l) return;
+    var isOpen = openLessons[lid] != null ? openLessons[lid] : li === 0;
+    h += '<details class="lesson" data-l="' + lid + '"' + (isOpen ? ' open' : '') + '><summary><span class="ltitle">' + esc(l.title) + '</span><span class="lcount">' + plural(l.exerciseIds.filter(function (x) { return S.exercises[x] && S.exercises[x].kind === 'board'; }).length, 'board') + '</span></summary><div class="lbody"><div class="bgrid">' +
+      (function () { var bs = l.exerciseIds.filter(function (x) { return S.exercises[x] && S.exercises[x].kind === 'board'; });
+        return bs.length ? bs.map(function (eid, i) {
+          return boardCard(S.exercises[eid], '/b/' + eid, '<button class="btn sm primary" data-a="push" type="button">Open for group</button>' +
+            boardMenu('<button class="btn sm" data-a="share" type="button">Share with more students</button><button class="btn sm" data-a="exUp" type="button"' + (i === 0 ? ' disabled' : '') + '>Move left</button><button class="btn sm" data-a="exDown" type="button"' + (i === bs.length - 1 ? ' disabled' : '') + '>Move right</button><button class="btn sm" data-a="copyEx" type="button">Copy to…</button>'), true);
+        }).join('') : '<p class="muted small">No boards yet.</p>'; })() +
+      '</div><div class="lfoot"><button class="btn sm primary" data-a="newBoard" type="button">New board</button>' +
+      '<label class="btn sm">Upload board (.json)<input type="file" multiple accept=".json,application/json" data-a="uploadBoard"></label>' +
+      '<button class="btn sm ghost" data-a="renameLesson" type="button">Rename lesson</button><button class="btn sm ghost" data-a="lUp" type="button"' + (li === 0 ? ' disabled' : '') + '>Up</button><button class="btn sm ghost" data-a="lDown" type="button"' + (li === g.lessonIds.length - 1 ? ' disabled' : '') + '>Down</button><button class="btn sm ghost danger" data-a="deleteLesson" type="button">Delete lesson</button></div></div></details>';
+  });
+  return h + '</div>';
+}
+
+/* группа как проект в Miro: внутри просто доски */
+function groupBoards(g) { var out = []; g.lessonIds.forEach(function (lid) { var l = S.lessons[lid]; if (!l) return; l.exerciseIds.forEach(function (x) { if (S.exercises[x] && S.exercises[x].kind === 'board') out.push(x); }); }); return out; }
+function boardsHtml() {
+  var g = G(), bs = groupBoards(g);
+  var h = '<div class="stack" data-l="__def"><div class="row"><button class="btn primary" data-a="newBoard" type="button">New board</button><button class="btn" data-a="fromLib" type="button">Add from My boards</button><label class="btn">Upload board (.json)<input type="file" multiple accept=".json,application/json" data-a="uploadBoard"></label></div>';
+  h += bs.length ? '<div class="bgrid">' + bs.map(function (eid, i) {
+    var e = S.exercises[eid], acc = (e.access || []).length;
+    return boardCard(e, '/b/' + eid, '<button class="btn sm" data-a="share" type="button">' + (acc ? 'Shared +' + acc : 'Share') + '</button>' +
+      boardMenu('<button class="btn sm" data-a="bLeft" type="button"' + (i === 0 ? ' disabled' : '') + '>Move left</button><button class="btn sm" data-a="bRight" type="button"' + (i === bs.length - 1 ? ' disabled' : '') + '>Move right</button><button class="btn sm" data-a="copyEx" type="button">Copy to…</button>'), true);
+  }).join('') + '</div>' : '<div class="empty">No boards yet. Create one or add a board from My boards.</div>';
+  return h + '<p class="hint">Every student of this group sees these boards in their account. To open a board for someone outside the group, use Share.</p></div>';
+}
+async function defLesson(g) { if (g.lessonIds.length) return g.lessonIds[0]; var l = await api('POST', '/api/t/groups/' + g.id + '/lessons', { title: 'Boards' }); return l.id; }
+/* live */
+function liveHtml() {
+  var g = G(), exs = groupExercises(g), opts = '';
+  g.lessonIds.forEach(function (lid) { var l = S.lessons[lid]; if (!l || !l.exerciseIds.length) return; opts += '<optgroup label="' + esc(l.title) + '">' + l.exerciseIds.map(function (eid) { return S.exercises[eid] && S.exercises[eid].kind === 'board' ? '<option value="' + eid + '">' + esc(S.exercises[eid].title) + '</option>' : ''; }).join('') + '</optgroup>'; });
+  exs = exs.filter(function (x) { return x.ex.kind === 'board'; });
+  var h = '<div class="livebar">' + (exs.length ? '<select id="pushSel" aria-label="Task">' + opts + '</select><button class="btn primary" data-a="pushSel" type="button">Open for everyone</button>' : '<span class="muted">Add a board or task in Lessons to open it for students.</span>') + '</div>';
+  if (!g.studentIds.length) return h + '<div class="empty">No students in this group yet. Add them in Students.</div>';
+  return h + '<div class="cards" id="cards">' + cardsHtml() + '</div>';
+}
+function cardsHtml() {
+  var g = G();
+  var ids = g.studentIds.slice().sort(function (a, b) { var o = { on: 0, away: 1, off: 2 }; return o[stateOf(a)] - o[stateOf(b)] || S.students[a].name.localeCompare(S.students[b].name); });
+  return ids.map(function (sid) {
+    var st = S.students[sid]; if (!st) return '';
+    var p = presence[sid] || {}, state = stateOf(sid), exId = p.online ? p.exerciseId : null, sum = exId ? S.summaries[sid + ':' + exId] : null;
+    var h = '<button class="card' + (state === 'off' ? ' off' : '') + (D.sid === sid ? ' sel' : '') + '" data-s="' + sid + '" type="button"><span class="ctop"><span class="dot ' + state + '"></span><b>' + esc(st.name) + '</b></span>';
+    if (!exId) h += '<span class="cex">' + (state === 'off' ? esc(stateText(sid)) : 'Not in a task') + '</span>';
+    else {
+      h += '<span class="cex">' + esc(exTitle(exId)) + (state === 'away' ? ' · tab in background' : '') + '</span>';
+      if (sum && sum.total) {
+        var t = sum.total, pending = Math.max(0, sum.filled - sum.correct - sum.wrong);
+        h += '<span class="bar"><i class="b-ok" style="width:' + (sum.correct / t * 100) + '%"></i><i class="b-bad" style="width:' + (sum.wrong / t * 100) + '%"></i><i class="b-fill" style="width:' + (pending / t * 100) + '%"></i></span>' +
+          '<span class="cnums"><span>' + sum.filled + ' of ' + t + ' done</span>' + (sum.correct ? '<span class="g">✓ ' + sum.correct + '</span>' : '') + (sum.wrong ? '<span class="r">✗ ' + sum.wrong + '</span>' : '') + '</span>';
+        if (!(S.exercises[exId] && S.exercises[exId].kind === 'board')) h += '<span class="pos"><span>' + (sum.near ? 'item ' + sum.near : 'top') + '</span><span class="track"><i style="left:' + (sum.scroll || 0) + '%"></i></span><span>' + (sum.scroll || 0) + '%</span></span>';
+      } else h += '<span class="cact">No answers yet</span>';
+      if (sum && sum.action) h += '<span class="cact">' + esc(sum.action) + ' · ' + ago(sum.updatedAt) + '</span>';
+    }
+    return h + '</button>';
+  }).join('');
+}
+function refreshLive() {
+  renderSide();
+  if (view === 'group' && tab === 'live' && $('#cards')) $('#cards').innerHTML = cardsHtml();
+  var t = $('.tab[data-tab=live]'), g = G();
+  if (t && g) { var on = onlineCount(g); t.innerHTML = 'Live lesson' + (on ? '<span class="n">' + on + ' online</span>' : ''); }
+}
+
+/* students */
+function studentsHtml() {
+  var g = G();
+  var others = Object.values(S.students).filter(function (s) { return g.studentIds.indexOf(s.id) < 0 && s.status !== 'pending'; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
+  var h = '<div class="stack">';
+  if (cred) h += '<div class="cred"><pre id="credText">' + esc(cred) + '</pre><button class="btn sm" data-a="copyCred" type="button">Copy</button><button class="btn sm ghost" data-a="hideCred" type="button">Hide</button></div>';
+  h += '<div class="label">New student</div><form class="row" id="newStudent"><input id="nsName" placeholder="Name, e.g. Maria K." maxlength="80" aria-label="Name"><input id="nsLogin" placeholder="Login, e.g. maria" maxlength="40" autocapitalize="off" spellcheck="false" aria-label="Login"><input id="nsPass" placeholder="Password" value="' + genPass() + '" aria-label="Password"><button class="btn primary" type="submit">Create and add</button></form>';
+  if (others.length) h += '<div class="label">Existing account</div><form class="row" id="addExisting"><select id="exStudent" aria-label="Student">' + others.map(function (s) { return '<option value="' + s.id + '">' + esc(s.name) + ' (' + esc(s.login) + ')</option>'; }).join('') + '</select><button class="btn" type="submit">Add to group</button></form>';
+  h += '<p class="hint">A student can be in several groups and sees all of them after signing in. Students who sign in with Telegram appear under Requests — approve them and pick this group.</p>';
+  if (!g.studentIds.length) return h + '<div class="empty">No students in this group yet.</div></div>';
+  h += '<div class="tablewrap"><table><thead><tr><th>Name</th><th>Login / Telegram</th><th>Status</th><th></th></tr></thead><tbody>' + g.studentIds.map(function (sid) {
+    var s = S.students[sid]; if (!s) return '';
+    return '<tr data-s="' + sid + '"><td>' + esc(s.name) + '</td><td>' + esc(s.login) + (s.tg ? '<br><span class="small muted">' + (/^id /.test(s.tg) ? 'TG ' + esc(s.tg) : '@' + esc(s.tg)) + '</span>' : '') + '</td><td><span class="row" style="gap:6px"><span class="dot ' + stateOf(sid) + '"></span><span class="small">' + (s.status === 'blocked' ? '<b style="color:var(--bad)">blocked</b> · ' : '') + esc(stateText(sid)) + '</span></span></td><td><span class="row" style="justify-content:flex-end">' +
+      (S.guestOnly ? '' : '<button class="btn sm' + (s.link ? '' : ' ghost') + '" data-a="linkSt" type="button" title="A personal link that signs the student in without Telegram or a password">' + (s.link ? '🔗 Login link' : 'Login link') + '</button>') + '<button class="btn sm ghost" data-a="blockSt" type="button">' + (s.status === 'blocked' ? 'Unblock' : 'Block') + '</button><button class="btn sm ghost" data-a="renameSt" type="button">Rename</button><button class="btn sm ghost" data-a="resetPw" type="button">New password</button><button class="btn sm ghost" data-a="removeSt" type="button">Remove from group</button><button class="btn sm ghost danger" data-a="deleteSt" type="button">Delete account</button></span></td></tr>';
+  }).join('') + '</tbody></table></div></div>';
+  return h;
+}
+function genPass() { var a = 'abcdefghjkmnpqrstuvwxyz23456789', s = '', r = crypto.getRandomValues(new Uint8Array(8)); for (var i = 0; i < 8; i++) s += a[r[i] % a.length]; return s; }
+function credText(name, login, pass) { return name + '\nSite: ' + location.origin + '\nLogin: ' + login + '\nPassword: ' + pass; }
+
+/* student drawer */
+function openDrawer(sid) {
+  var g = G(), p = presence[sid] || {}, exs = groupExercises(g);
+  var exId = p.online && p.exerciseId ? p.exerciseId : null;
+  if (!exId) { var best = null; exs.forEach(function (x) { var s = S.summaries[sid + ':' + x.ex.id]; if (s && (!best || s.updatedAt > best.t)) best = { id: x.ex.id, t: s.updatedAt }; }); exId = best ? best.id : (exs[0] ? exs[0].ex.id : null); }
+  D = { sid: sid, exId: exId, follow: true, data: null };
+  $('#drawer').hidden = false; renderDrawer(); refreshLive(); loadDetail();
+}
+function closeDrawer() { D = { sid: null, exId: null, follow: true, data: null }; $('#drawer').hidden = true; refreshLive(); }
+async function loadDetail() {
+  if (!D.sid || !D.exId) { renderDrawer(); return; }
+  var sid = D.sid, exId = D.exId;
+  try { var d = await api('GET', '/api/t/progress/' + sid + '/' + exId); if (D.sid === sid && D.exId === exId) { D.data = d; renderDrawer(); } } catch (e) { toast(e.message); }
+}
+function renderDrawer() {
+  var el = $('#drawer'); if (!D.sid) return;
+  var st = S.students[D.sid], g = G(), p = presence[D.sid] || {}, opts = '';
+  g.lessonIds.forEach(function (lid) { var l = S.lessons[lid]; if (!l || !l.exerciseIds.length) return; opts += '<optgroup label="' + esc(l.title) + '">' + l.exerciseIds.map(function (eid) { var e = S.exercises[eid]; if (!e) return ''; return '<option value="' + eid + '"' + (eid === D.exId ? ' selected' : '') + '>' + (p.online && p.exerciseId === eid ? '● ' : '') + esc(e.title) + '</option>'; }).join('') + '</optgroup>'; });
+  var h = '<div class="dh"><span class="dot ' + stateOf(D.sid) + '"></span><h2>' + esc(st.name) + '</h2><button class="btn ghost sm" data-a="closeDrawer" type="button">Close</button></div><div class="dbody"><div class="small muted">' + esc(stateText(D.sid)) + (p.online && p.exerciseId ? ' · now in “' + esc(exTitle(p.exerciseId)) + '”' : '') + '</div>';
+  if (!D.exId) { el.innerHTML = h + '<div class="empty">This group has no tasks yet.</div></div>'; return; }
+  h += '<div class="dsec"><select id="dEx" aria-label="Task">' + opts + '</select><div class="row"><label class="small row" style="gap:6px"><input type="checkbox" id="dFollow"' + (D.follow ? ' checked' : '') + '> Follow the student</label><button class="btn sm" data-a="pushOne" type="button" style="margin-left:auto">Open this task for them</button></div></div>';
+  var d = D.data;
+  if (!d) { el.innerHTML = h + '<p class="muted">Loading…</p></div>'; return; }
+  var pr = d.prog, isBoard = S.exercises[D.exId] && S.exercises[D.exId].kind === 'board';
+  h += '<div class="dsec"><div class="label">Answers' + (pr ? ' · ' + pr.filled + ' of ' + pr.total + (pr.correct || pr.wrong ? ' · ✓ ' + pr.correct + ' ✗ ' + pr.wrong : '') : '') + '</div>';
+  if (!pr || !pr.fields.length) h += '<p class="muted small">No answers yet, or this task has no answer fields.</p>';
+  else h += '<ul class="anslist">' + pr.fields.map(function (f, i) {
+    var mk = f.ok === true ? '<span class="mark ok">right</span>' : f.ok === false ? '<span class="mark bad">wrong</span>' : '<span></span>';
+    return '<li' + (pr.near === i + 1 && p.online && p.exerciseId === D.exId ? ' class="here"' : '') + '><span class="no">' + (i + 1) + '</span><span><span class="v' + (f.v ? '' : ' e') + '">' + (f.v ? esc(f.v) : 'empty') + '</span>' + (f.ctx ? '<br><span class="ctx">' + esc(f.ctx) + '</span>' : '') + '</span>' + mk + '</li>';
+  }).join('') + '</ul>';
+  h += '</div>';
+  if (isBoard) h += '<a class="btn sm" href="/b/' + D.exId + '" target="_blank" rel="noopener" style="align-self:flex-start">Open board</a>';
+  if (pr && pr.log && pr.log.length) h += '<div class="dsec"><div class="label">' + (isBoard ? 'Actions on the board' : 'Activity') + '</div><ul class="log">' + pr.log.slice().reverse().map(function (x) { return '<li><time>' + clock(x.t) + '</time>' + esc(x.a) + '</li>'; }).join('') + '</ul></div>';
+  if (pr && !isBoard) h += '<div class="dsec"><div class="label">Where on the page</div><div class="pos"><span>' + (pr.near ? 'near item ' + pr.near : 'at the top') + '</span><span class="track"><i style="left:' + pr.scroll + '%"></i></span><span>' + pr.scroll + '%</span></div></div>';
+  h += '<div class="dsec"><div class="label">Student’s notes</div><div id="dNotes"></div></div></div>';
+  el.innerHTML = h;
+  dNotes = makeNotes($('#dNotes'), { placeholder: 'The student hasn’t written anything yet. You can add a comment here.', onChange: function (html) { socket.emit('doc:set', { studentId: D.sid, exerciseId: D.exId, html: html }); } });
+  dNotes.set(d.doc || '');
+}
+
+/* UI events */
+document.addEventListener('click', async function (e) {
+  if (e.target.closest('#libBtn')) { view = 'lib'; folder = null; closeDrawer(); remember(); render(); return; }
+  if (e.target.closest('#reqBtn')) { view = 'req'; closeDrawer(); remember(); render(); return; }
+  var fc = e.target.closest('[data-fold]'); if (fc) { folder = fc.dataset.fold || null; try { localStorage.setItem('klass.folder', folder || ''); } catch (err) {} renderLib(); return; }
+  var fo = e.target.closest('.fcard[data-folder]');
+  if (fo && !e.target.closest('[data-a]')) { folder = fo.dataset.folder; try { localStorage.setItem('klass.folder', folder); } catch (err) {} renderLib(); return; }
+  var gb = e.target.closest('.gbtn[data-g]'); if (gb) { cur = gb.dataset.g; view = 'group'; cred = null; closeDrawer(); remember(); render(); return; }
+  var tb = e.target.closest('.tab'); if (tb) { tab = tb.dataset.tab; remember(); renderMain(); return; }
+  var card = e.target.closest('.card[data-s]'); if (card) { openDrawer(card.dataset.s); return; }
+  var b = e.target.closest('[data-a]'); if (!b || b.tagName === 'INPUT') return;
+  var a = b.dataset.a, g = G();
+  var lEl = b.closest('[data-l]'), lid = lEl && lEl.dataset.l;
+  if (lid === '__def' && /^(newBoard)$/.test(b.dataset.a)) lid = await defLesson(G());
+  var eEl = b.closest('[data-e]'), eid = eEl && eEl.dataset.e, sEl = b.closest('tr[data-s]'), sid = sEl && sEl.dataset.s;
+  try {
+    var fid = fo && fo.dataset.folder, rq = b.closest('[data-st]');
+    if (a === 'approve') { await api('POST', '/api/t/students/' + rq.dataset.st + '/approve', { groupId: $('select', rq).value }); toast('Approved'); await load(); return; }
+    if (a === 'reject') { if (confirm('Decline this request?')) { await api('POST', '/api/t/students/' + rq.dataset.st + '/reject'); await load(); } return; }
+    if (a === 'newFolder') { var fnm = prompt('Folder name', 'New folder'); if (fnm && fnm.trim()) { await api('POST', '/api/t/folders', { name: fnm, parentId: folder }); await load(); } return; }
+    if (a === 'renFolder') { var rn = prompt('Folder name', S.folders[fid].name); if (rn && rn.trim()) { await api('PATCH', '/api/t/folders/' + fid, { name: rn }); await load(); } return; }
+    if (a === 'movFolder') { moveDialog('folder', fid); return; }
+    if (a === 'delFolder') { if (confirm('Delete folder “' + S.folders[fid].name + '”? Boards and folders inside move one level up.')) { await api('DELETE', '/api/t/folders/' + fid); await load(); } return; }
+    if (a === 'moveEx') { moveDialog('ex', eid); return; }
+    if (a === 'noCover') { await api('PATCH', '/api/t/exercises/' + eid, { cover: null }); await load(); return; }
+    if (a === 'miro') { miroDialog(); return; }
+    if (a === 'share') { shareDialog(eid); return; }
+    if (a === 'renameGroup') { var n = prompt('Group name', g.name); if (n && n.trim()) { await api('PATCH', '/api/t/groups/' + g.id, { name: n }); await load(); } }
+    else if (a === 'deleteGroup') { if (confirm('Delete “' + g.name + '” with all its lessons, tasks and answers? Student accounts stay.')) { await api('DELETE', '/api/t/groups/' + g.id); cur = null; await load(); } }
+    else if (a === 'renameLesson') { var t = prompt('Lesson name', S.lessons[lid].title); if (t && t.trim()) { await api('PATCH', '/api/t/lessons/' + lid, { title: t }); await load(); } }
+    else if (a === 'deleteLesson') { if (confirm('Delete lesson “' + S.lessons[lid].title + '” with all tasks and answers?')) { await api('DELETE', '/api/t/lessons/' + lid); await load(); } }
+    else if (a === 'lUp' || a === 'lDown') { await api('PATCH', '/api/t/lessons/' + lid, { move: a === 'lUp' ? 'up' : 'down' }); await load(); }
+    else if (a === 'bLeft' || a === 'bRight') { await api('PATCH', '/api/t/exercises/' + eid, { move: a === 'bLeft' ? 'up' : 'down' }); await load(); }
+    else if (a === 'fromLib') {
+      var lib = S.library.map(function (x) { return S.exercises[x]; }).filter(Boolean);
+      if (!lib.length) { toast('My boards is empty'); return; }
+      modal('<h2 style="font-size:17px">Add from My boards</h2><p class="small muted" style="margin:0">A copy goes into this group — your original stays in My boards.</p><div style="max-height:360px;overflow:auto;display:flex;flex-direction:column;gap:2px">' + lib.map(function (x) { return '<label class="chk"><input type="checkbox" value="' + x.id + '"> ' + esc(x.title) + '</label>'; }).join('') + '</div><div class="row"><button class="btn primary" data-m="go" type="button">Add</button><button class="btn ghost" data-m="close" type="button">Cancel</button></div>', async function (ev, mm) {
+        if (!ev.target.closest('[data-m=go]')) return;
+        var ids = $$('input:checked', mm).map(function (c) { return c.value; }); if (!ids.length) return;
+        var dl = await defLesson(G());
+        for (var k = 0; k < ids.length; k++) await api('POST', '/api/t/exercises/' + ids[k] + '/copy', { lessonId: dl });
+        mm.remove(); toast('Added: ' + plural(ids.length, 'board')); await load();
+      });
+    }
+    else if (a === 'exUp' || a === 'exDown') { await api('PATCH', '/api/t/exercises/' + eid, { move: a === 'exUp' ? 'up' : 'down' }); await load(); }
+    else if (a === 'renameEx') { var et = prompt('Name', S.exercises[eid].title); if (et && et.trim()) { await api('PATCH', '/api/t/exercises/' + eid, { title: et }); await load(); } }
+    else if (a === 'deleteEx') { if (confirm('Delete “' + S.exercises[eid].title + '” and all answers to it?')) { await api('DELETE', '/api/t/exercises/' + eid); await load(); } }
+    else if (a === 'newBoard') { var bt = prompt('Board name', 'Board'); if (bt && bt.trim()) { var nb = await api('POST', '/api/t/lessons/' + lid + '/boards', { title: bt }); openLessons[lid] = true; await load(); window.open('/b/' + nb.id, '_blank'); } }
+    else if (a === 'copyEx') {
+      if ($('.copyrow', eEl)) return;
+      var cr = document.createElement('span'); cr.className = 'row copyrow';
+      cr.innerHTML = '<select aria-label="Copy to">' + lessonOptions(S.exercises[eid].kind === 'board') + '</select><button class="btn sm primary" data-a="copyGo" type="button">Copy</button>';
+      ($('.row', eEl) || eEl).appendChild(cr);
+    }
+    else if (a === 'copyGo') { var target = $('.copyrow select', eEl).value; await api('POST', '/api/t/exercises/' + eid + '/copy', { lessonId: target }); toast('Copied'); if (target !== '__lib') openLessons[target] = true; await load(); }
+    else if (a === 'push') pushTo(eid);
+    else if (a === 'pushSel') pushTo($('#pushSel').value);
+    else if (a === 'pushOne') { socket.emit('push', { exerciseId: D.exId, studentId: D.sid }); toast('Opened for the student: ' + exTitle(D.exId)); }
+    else if (a === 'closeDrawer') closeDrawer();
+    else if (a === 'blockSt') { var blk = S.students[sid].status !== 'blocked'; if (!blk || confirm('Block ' + S.students[sid].name + '? They are signed out right away and can\'t sign in until you unblock them.')) { await api('POST', '/api/t/students/' + sid + '/block', { block: blk }); await load(); } }
+    else if (a === 'linkSt') linkDialog(sid);
+    else if (a === 'renameSt') { var sn = prompt('Student name', S.students[sid].name); if (sn && sn.trim()) { await api('PATCH', '/api/t/students/' + sid, { name: sn }); await load(); } }
+    else if (a === 'resetPw') { var np = genPass(); if (confirm('Set a new password for ' + S.students[sid].name + ': ' + np + '? The old one stops working.')) { await api('PATCH', '/api/t/students/' + sid, { password: np }); cred = credText(S.students[sid].name, S.students[sid].login, np); await load(); } }
+    else if (a === 'removeSt') { if (confirm('Remove ' + S.students[sid].name + ' from this group? Account and answers are kept.')) { await api('DELETE', '/api/t/groups/' + g.id + '/members/' + sid); await load(); } }
+    else if (a === 'deleteSt') { if (confirm('Delete ' + S.students[sid].name + '’s account and all their answers in every group?')) { await api('DELETE', '/api/t/students/' + sid); if (D.sid === sid) closeDrawer(); await load(); } }
+    else if (a === 'copyCred') { try { await navigator.clipboard.writeText(cred); toast('Copied'); } catch (err) { var r = document.createRange(); r.selectNodeContents($('#credText')); getSelection().removeAllRanges(); getSelection().addRange(r); } }
+    else if (a === 'hideCred') { cred = null; renderTab(); }
+  } catch (err) { toast(err.message); }
+});
+function pushTo(eid) { socket.emit('push', { exerciseId: eid }); toast('“' + exTitle(eid) + '” opened for everyone online'); }
+document.addEventListener('toggle', function (e) { if (e.target.matches && e.target.matches('details.lesson')) openLessons[e.target.dataset.l] = e.target.open; }, true);
+document.addEventListener('change', async function (e) {
+  var t = e.target;
+  if (t.id === 'dEx') { D.exId = t.value; D.follow = false; D.data = null; renderDrawer(); loadDetail(); return; }
+  if (t.id === 'dFollow') { D.follow = t.checked; return; }
+  if (t.dataset.a === 'upload') {
+    var lid = t.closest('[data-l]').dataset.l, files = Array.prototype.slice.call(t.files), ok = 0;
+    for (var i = 0; i < files.length; i++) { try { var html = await files[i].text(); var title = (/<title[^>]*>([^<]*)<\/title>/i.exec(html) || [])[1] || files[i].name.replace(/\.html?$/i, ''); await api('POST', '/api/t/lessons/' + lid + '/exercises', { title: title.trim(), html: html }); ok++; } catch (err) { toast(files[i].name + ': ' + err.message); } }
+    openLessons[lid] = true; if (ok) toast('Uploaded: ' + plural(ok, 'task')); await load(); return;
+  }
+  if (t.dataset.a === 'uploadBoard' || t.id === 'libImport') {
+    var blid = t.id === 'libImport' ? null : t.closest('[data-l]').dataset.l; if (blid === '__def') blid = await defLesson(G());
+    var bf = Array.prototype.slice.call(t.files), bok = 0;
+    for (var j = 0; j < bf.length; j++) {
+      try { var data = JSON.parse(await bf[j].text()); var ttl = data.title || bf[j].name.replace(/\.json$/i, ''); if (blid) await api('POST', '/api/t/lessons/' + blid + '/boards', { title: ttl, data: data }); else await api('POST', '/api/t/library/boards', { title: ttl, data: data, folderId: folder }); bok++; }
+      catch (err) { toast(bf[j].name + ': ' + (err instanceof SyntaxError ? 'not a board file' : err.message)); }
+    }
+    if (blid) openLessons[blid] = true; if (bok) toast('Boards uploaded: ' + bok); await load(); return;
+  }
+  if (t.dataset.a === 'coverEx' && t.files[0]) {
+    var ceid = t.closest('[data-e]').dataset.e;
+    try { toast('Uploading the cover…'); var curl = await uploadImage(t.files[0]); await api('PATCH', '/api/t/exercises/' + ceid, { cover: curl }); await load(); } catch (err) { toast(err.message); }
+    t.value = ''; return;
+  }
+  if (t.id === 'newLibCover') { $('#newLibCoverName').textContent = t.files[0] ? t.files[0].name : ''; return; }
+  if (t.dataset.a === 'replaceEx') { var eid = t.closest('[data-e]').dataset.e; try { await api('PATCH', '/api/t/exercises/' + eid, { html: await t.files[0].text() }); toast('File replaced'); } catch (err) { toast(err.message); } t.value = ''; }
+});
+document.addEventListener('submit', async function (e) {
+  e.preventDefault(); var f = e.target;
+  try {
+    if (f.id === 'newGroup') { var name = $('#newGroupName').value.trim(); if (!name) return; var g = await api('POST', '/api/t/groups', { name: name }); $('#newGroupName').value = ''; cur = g.id; view = 'group'; tab = 'students'; remember(); await load(); }
+    else if (f.id === 'newLesson') { var title = $('#newLessonTitle').value.trim(); if (!title) return; var l = await api('POST', '/api/t/groups/' + cur + '/lessons', { title: title }); openLessons[l.id] = true; await load(); }
+    else if (f.id === 'newLib') { var lt = $('#newLibTitle').value.trim() || 'My board'; var nb = await api('POST', '/api/t/library/boards', { title: lt, folderId: folder }); var cf = $('#newLibCover').files[0]; if (cf) { try { await api('PATCH', '/api/t/exercises/' + nb.id, { cover: await uploadImage(cf) }); } catch (err) { toast(err.message); } } await load(); window.open('/b/' + nb.id, '_blank'); }
+    else if (f.id === 'newStudent') { var n = $('#nsName').value.trim(), lg = $('#nsLogin').value.trim(), pw = $('#nsPass').value; await api('POST', '/api/t/students', { name: n, login: lg, password: pw, groupId: cur }); cred = credText(n, lg, pw); await load(); }
+    else if (f.id === 'addExisting') { await api('POST', '/api/t/groups/' + cur + '/members', { studentId: $('#exStudent').value }); await load(); }
+    else if (f.id === 'pwForm') { await api('POST', '/api/t/password', { old: $('#pwOld').value, password: $('#pwNew').value }); $('#pwOld').value = ''; $('#pwNew').value = ''; toast('Password changed'); }
+  } catch (err) { toast(err.message); }
+});
+$('#logout').addEventListener('click', async function () { await api('POST', '/api/logout'); location.href = '/'; });
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && D.sid) closeDrawer(); });
+
+/* realtime */
+socket.on('boards-changed', function () { load(); });
+socket.on('requests', function () { load().then(function () { var n = pendingList().length; if (n) toast('New sign-in request — see Requests', function () { view = 'req'; render(); }); }); });
+socket.on('presence-all', function (list) { list.forEach(function (p) { presence[p.studentId] = p; }); if (S) refreshLive(); });
+socket.on('presence', function (p) {
+  var was = presence[p.studentId]; presence[p.studentId] = p;
+  if (!S) return;
+  if (D.sid === p.studentId && D.follow && p.online && p.exerciseId && p.exerciseId !== D.exId) { D.exId = p.exerciseId; D.data = null; loadDetail(); }
+  if (view === 'group' && tab === 'students' && (!was || was.online !== p.online)) renderTab();
+  refreshLive();
+});
+socket.on('progress', function (d) {
+  if (!S) return;
+  var p = d.prog;
+  S.summaries[d.studentId + ':' + d.exerciseId] = { filled: p.filled, total: p.total, correct: p.correct, wrong: p.wrong, scroll: p.scroll, near: p.near, action: p.action, updatedAt: p.updatedAt };
+  if (D.sid === d.studentId && D.exId === d.exerciseId && D.data) {
+    D.data.prog = p;
+    var notesHtml = dNotes && document.activeElement === dNotes.el ? null : D.data.doc;
+    var body = $('#drawer .dbody'), sc = body ? body.scrollTop : 0;
+    if (!(dNotes && document.activeElement === dNotes.el)) { renderDrawer(); var b2 = $('#drawer .dbody'); if (b2) b2.scrollTop = sc; }
+  }
+  refreshLive();
+});
+socket.on('doc', function (d) {
+  if (D.sid === d.studentId && D.exId === d.exerciseId && D.data) { D.data.doc = d.html; if (dNotes && d.by === 's') dNotes.set(d.html); }
+  else if (d.by === 's' && S && S.students[d.studentId] && view === 'group') { /* quiet: notes are visible when you open the student */ }
+});
+setInterval(function () { if (S) refreshLive(); }, 20000);
+load().catch(function (e) { toast(e.message); });
+</script>
+</body>
+</html>
