@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<link rel="icon" href="/icon"><link rel="apple-touch-icon" href="/icon">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Board · Speak&amp;Teach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Unbounded:wght@300;400;500;600;700&family=Inter:wght@400;500;600&family=Nunito:ital,wght@0,400;0,700;1,400;1,700&family=Montserrat:ital,wght@0,400;0,700;1,400;1,700&family=Lora:ital,wght@0,400;0,700;1,400;1,700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Caveat:wght@400;700&family=Comfortaa:wght@400;700&family=Rubik:ital,wght@0,400;0,700;1,400;1,700&family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&family=Pacifico&family=Marck+Script&family=Bad+Script&family=Neucha&family=Pangolin&family=Amatic+SC:wght@400;700&family=Lobster&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Open+Sans:ital,wght@0,400;0,700;1,400;1,700&family=Roboto:ital,wght@0,400;0,700;1,400;1,700&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&family=Noto+Sans:ital,wght@0,400;0,700;1,400;1,700&family=Arimo:ital,wght@0,400;0,700;1,400;1,700&family=Roboto+Slab:wght@400;700&family=Roboto+Condensed:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Permanent+Marker&family=Fredoka:wght@400;600&display=swap">
+<link rel="stylesheet" href="/static/app.css">
+<link rel="stylesheet" href="/static/board.css">
+</head>
+<body>
+<div class="bapp" id="bapp">
+  <header class="bhead">
+  <div class="hcard hleft">
+    <a class="hbtn" id="homeBtn" href="/" data-tip="Back to my boards and lessons" hidden><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7"/><path d="M6 9.5V20h12V9.5"/></svg></a>
+    <a class="blogo" href="/" data-logo="1" aria-label="Speak&amp;Teach"></a><span class="bsep" aria-hidden="true"></span>
+    <h1 id="btitle">Board</h1>
+    <button class="hbtn" id="navBtn" type="button" data-tip="All frames on this board"><svg viewBox="0 0 24 24"><path d="M7 3v18M17 3v18M3 7h18M3 17h18"/></svg><span class="hl">Frames</span></button>
+    <button class="hbtn" id="mineBtn" type="button" data-tip="Go to the frames and items assigned to you" hidden><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.6 3.6-5.6 7-5.6s6.2 2 7 5.6"/></svg><span class="hl">My tasks</span></button>
+    <span class="chip" id="anonChip" hidden></span>
+    <button class="chip hand" id="handChip" type="button" hidden></button>
+    <button class="chip" id="stuChip" type="button" hidden data-tip="See games and flip cards the way students see them">👁 Student view</button>
+    <span class="chip" id="viewChip" hidden data-tip="You can look but not change anything">View only</span>
+    <button class="starchip coinchip" id="balChip" type="button" hidden data-tip="Your lesson balance — only you see it"></button>
+    <span class="starchip" id="starChip" hidden data-tip="Your stars — only you see them"></span>
+    <button class="chip lesson" id="lessonChip" type="button" hidden></button>
+    <button class="chip lesson" id="exitChip" type="button" hidden>✎ Exit ticket</button>
+  </div>
+  <div class="hcard hright">
+    <button class="tpill" id="tShared" type="button" data-tip="Shared timer" hidden></button>
+    <button class="tpill mine" id="tMine" type="button" data-tip="Your own timer" hidden></button>
+    <div class="people" id="people" aria-label="People on the board"></div>
+    <span class="conn" id="conn" hidden>Reconnecting…</span>
+    <button class="hbtn" id="bringBtn" type="button" data-tip="Bring everyone — or one person — to what you see" hidden><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg><span class="hl">Bring to me</span><span class="car">▾</span></button>
+    <button class="hbtn" id="shareBtn" type="button" data-tip="Choose which students can open this board" hidden><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.3"/><path d="M3 19c.6-3.2 3-5 6-5s5.4 1.8 6 5M16 7.5h5M18.5 5v5"/></svg><span class="hl">Share</span></button>
+    <button class="hbtn" id="balBtn" type="button" data-tip="Balance: mark who was absent, add the topic and charge the lesson" hidden><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M9.5 10.2c.6-.9 1.5-1.2 2.5-1.2 1.4 0 2.5.6 2.5 1.7 0 2.2-5 1.1-5 3.3 0 1.1 1.1 1.8 2.5 1.8 1 0 1.9-.3 2.5-1.2"/></svg><span class="hl">Balance</span></button>
+    <button class="hbtn" id="reactBtn" type="button" data-tip="Send a reaction everyone sees"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span class="hl">React</span></button>
+    <button class="hbtn" id="notesBtn" type="button" data-tip="Notes: class notes for everyone and your own"><svg viewBox="0 0 24 24"><path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg><span class="hl">Notes</span></button>
+    <button class="hbtn" id="linksBtn" type="button" data-tip="Your useful links" hidden><svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg><span class="hl">Links</span></button>
+    <button class="hbtn" id="moreBtn" type="button" data-tip="Timer, PDF, history and more"><svg viewBox="0 0 24 24"><path d="M6 12h.01M12 12h.01M18 12h.01" stroke-width="2.8"/></svg></button>
+    <span hidden><button id="timerBtn" type="button"></button><button id="pdfBtn" type="button"></button><button id="logBtn" type="button"></button></span>
+  </div>
+  </header>
+
+  <div class="vp" id="vp">
+    <div class="world" id="world">
+      <div class="layer" id="lf"></div>
+      <div class="layer" id="lz"></div>
+      <div class="layer" id="lt"></div>
+      <div class="layer" id="lh"></div>
+      <svg class="links" id="lk" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="layer" id="ln"></div>
+      <svg class="ink" id="ink" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="layer" id="lc"></div>
+      <div class="layer" id="lsel"></div>
+      <div class="layer" id="lcur"></div>
+    </div>
+    <div class="marquee" id="marquee" hidden></div>
+    <div class="ctx" id="ctx" hidden></div>
+    <div class="result" id="result" hidden></div>
+    <div class="pop" id="stkPal" hidden aria-label="Emoji"></div>
+    <div class="pop" id="colPal" hidden aria-label="Pen colour"></div>
+    <div class="pop" id="shpPal" hidden aria-label="Shapes"></div>
+    <div class="pop" id="flyPal" hidden></div>
+    <div class="drophint" id="dropHint" hidden>Drop to add the file</div>
+    <div class="knocks" id="knocks"></div>
+    <div class="presbar" id="presBar" hidden></div>
+    <div class="roombar" id="roomBar" hidden></div>
+    <div class="zoombox"><button id="zOut" type="button" data-tip="Zoom out (Ctrl −)">−</button><button id="zLvl" type="button" data-tip="100% · click again to fit">100%</button><button id="zIn" type="button" data-tip="Zoom in (Ctrl +)">+</button><button id="zFit" type="button" data-tip="Fit everything (Shift+1)"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button></div>
+  </div>
+
+  <nav class="lbar" id="tools" aria-label="Tools"></nav>
+
+  <aside class="side-panel" id="logPanel" hidden>
+    <div class="sp-head"><h2>History</h2><button class="hbtn" data-close="logPanel" type="button">Close</button></div>
+    <ul class="blog" id="blog"></ul>
+  </aside>
+  <aside class="side-panel" id="navPanel" hidden>
+    <div class="sp-head"><h2>Frames</h2><button class="hbtn" data-close="navPanel" type="button">Close</button></div>
+    <div class="sp-body" id="navBody"></div>
+  </aside>
+  <aside class="side-panel" id="tplPanel" hidden>
+    <div class="sp-head"><h2>Auto-checked tasks</h2><button class="hbtn" data-close="tplPanel" type="button">Close</button></div>
+    <div class="sp-body" id="tplBody"></div>
+  </aside>
+  <aside class="side-panel" id="mytplPanel" hidden>
+    <div class="sp-head"><h2>My templates</h2><button class="hbtn" data-close="mytplPanel" type="button">Close</button></div>
+    <div class="sp-body" id="mytplBody"></div>
+  </aside>
+  <aside class="side-panel wide" id="notesPanel" hidden>
+    <div class="sp-head"><div class="ntabs" id="notesTabs"></div><button class="hbtn" id="notesPdf" type="button" data-tip="Save these notes as PDF">PDF</button><button class="hbtn" data-close="notesPanel" type="button">Close</button></div>
+    <div class="nwhorow" id="notesWhoRow" hidden><select id="notesWho" class="nwho"></select></div>
+    <div class="sp-body" id="notesEd" style="padding:10px 12px"></div>
+  </aside>
+  <aside class="side-panel" id="exitPanel" hidden>
+    <div class="sp-head"><h2>Exit ticket</h2><button class="hbtn" data-close="exitPanel" type="button">Later</button></div>
+    <div class="sp-body" id="exitBody"></div>
+  </aside>
+  <aside class="side-panel" id="roomsPanel" hidden>
+    <div class="sp-head"><h2>Pair rooms</h2><button class="hbtn" data-close="roomsPanel" type="button">Close</button></div>
+    <div class="sp-body" id="roomsBody"></div>
+  </aside>
+  <aside class="side-panel" id="journalPanel" hidden>
+    <div class="sp-head"><h2>Journal</h2><button class="hbtn" data-close="journalPanel" type="button">Close</button></div>
+    <div class="sp-body" id="journalBody"></div>
+  </aside>
+  <aside class="side-panel" id="boardPanel" hidden>
+    <div class="sp-head"><h2>Board settings</h2><button class="hbtn" data-close="boardPanel" type="button">Close</button></div>
+    <div class="sp-body" id="boardBody"></div>
+  </aside>
+  <aside class="side-panel" id="sendPanel" hidden>
+    <div class="sp-head"><h2>Copy to another board</h2><button class="hbtn" data-close="sendPanel" type="button">Close</button></div>
+    <div class="sp-body" id="sendBody"></div>
+  </aside>
+  <aside class="side-panel" id="props" hidden>
+    <div class="sp-head"><h2 id="propsTitle">Settings</h2><button class="hbtn" data-close="props" type="button">Close</button></div>
+    <div class="sp-body" id="propsBody"></div>
+  </aside>
+</div>
+<div class="lightbox" id="lightbox" hidden><img id="lbImg" alt=""></div>
+<div class="err-full" id="errFull" hidden></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/static/common.js"></script>
+<script src="/static/games.js"></script>
+<script src="/static/board.js"></script>
+</body>
+</html>

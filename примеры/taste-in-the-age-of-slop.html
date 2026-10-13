@@ -1,0 +1,183 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Taste in the Age of Slop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one reading column, leaf-strewn header, sentences as a numbered worksheet, word bank sticks above the list */
+:root{
+  --paper:#EDEEE6; --card:#F7F6EF; --ink:#2A251F; --muted:#6B6355;
+  --maple:#B4461D; --mustard:#C98F22; --moss:#55673F; --line:#D6D2C2;
+  --ok:#3F7A3A; --bad:#B23A2A; --okbg:#E3EDD8; --badbg:#F5DED6;
+  --display:"Young Serif", Georgia, "Times New Roman", serif;
+  --body:"Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#1C1915; --card:#25211B; --ink:#EDE6D8; --muted:#A79C88;
+  --maple:#E2733F; --mustard:#E0AE4A; --moss:#93A876; --line:#3A342B;
+  --ok:#8CC27F; --bad:#EC8A74; --okbg:#26331F; --badbg:#3A231C; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#1C1915; --card:#25211B; --ink:#EDE6D8; --muted:#A79C88;
+  --maple:#E2733F; --mustard:#E0AE4A; --moss:#93A876; --line:#3A342B;
+  --ok:#8CC27F; --bad:#EC8A74; --okbg:#26331F; --badbg:#3A231C; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;margin:0}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:24px 48px}
+header{position:relative;padding-block:28px 20px;overflow:hidden}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--moss);font-weight:600}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(30px,6vw,46px);line-height:1.08;margin:.25em 0 .3em;text-wrap:balance;max-width:14ch}
+h1 em{font-style:normal;color:var(--maple)}
+.lede{color:var(--muted);max-width:56ch;margin:0}
+.leaf{position:absolute;pointer-events:none;opacity:.9}
+.leaf svg{display:block}
+@media (prefers-reduced-motion:no-preference){
+  .leaf{animation:sway 7s ease-in-out infinite alternate}
+  .leaf:nth-child(2){animation-duration:9s;animation-delay:-3s}
+  .leaf:nth-child(3){animation-duration:11s;animation-delay:-5s}
+}
+@keyframes sway{from{transform:translateY(0) rotate(var(--r))}to{transform:translateY(10px) rotate(calc(var(--r) + 14deg))}}
+
+.bank{position:sticky;top:env(safe-area-inset-top,0px);z-index:2;background:var(--paper);padding-block:12px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.bank-label{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;justify-content:space-between;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:14px;line-height:1.3;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;text-align:left}
+.chip:hover{border-color:var(--mustard)}
+.chip:focus-visible,.gap:focus-visible,.btn:focus-visible{outline:2px solid var(--maple);outline-offset:2px}
+.chip.used{opacity:.35;text-decoration:line-through;cursor:default}
+
+ol.items{list-style:none;margin:0;padding:0;counter-reset:q}
+ol.items li{counter-increment:q;display:grid;grid-template-columns:2.2em 1fr;gap:4px 10px;padding-block:14px;border-bottom:1px dashed var(--line)}
+ol.items li::before{content:counter(q);font-family:var(--display);color:var(--mustard);font-size:20px;line-height:1.4;font-variant-numeric:tabular-nums}
+.sent{min-width:0}
+.gap{font:inherit;display:inline-block;min-width:7em;max-width:100%;padding:1px 8px;margin:0 2px;border:none;border-bottom:2px solid var(--muted);background:transparent;color:var(--maple);font-weight:600;cursor:pointer;text-align:center;border-radius:4px 4px 0 0;white-space:normal}
+.gap:empty::after{content:"\00a0"}
+.gap.active{background:color-mix(in srgb,var(--mustard) 22%,transparent);border-bottom-color:var(--mustard)}
+.gap.ok{background:var(--okbg);border-bottom-color:var(--ok);color:var(--ok)}
+.gap.bad{background:var(--badbg);border-bottom-color:var(--bad);color:var(--bad)}
+.fix{grid-column:2;font-size:13px;color:var(--ok)}
+
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:22px}
+.btn{font:inherit;font-weight:600;font-size:15px;padding:10px 18px;border-radius:8px;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--maple);border-color:var(--maple);color:var(--card)}
+.score{margin-left:auto;font-family:var(--display);font-size:22px;font-variant-numeric:tabular-nums}
+.score small{font-family:var(--body);font-size:13px;color:var(--muted);display:block;text-align:right}
+.hint{font-size:13px;color:var(--muted);margin-top:14px}
+</style></head><body>
+
+<div class="wrap">
+  <header>
+    <span class="leaf" style="--r:-20deg;top:6px;right:8%"><svg width="46" height="46" viewBox="0 0 24 24"><path fill="var(--maple)" d="M12 2l1.6 3.8 3-1.4-.6 3.4 3.7-.6-1.7 3 3 1.6-3.3 1.6 1 3.3-3.6-1-1 3.3-1.6-2.6V22h-1v-4.6l-1.6 2.6-1-3.3-3.6 1 1-3.3L3 12.8 6 11.2 4.3 8.2l3.7.6-.6-3.4 3 1.4z"/></svg></span>
+    <span class="leaf" style="--r:25deg;top:58px;right:2%"><svg width="30" height="30" viewBox="0 0 24 24"><path fill="var(--mustard)" d="M12 2l1.6 3.8 3-1.4-.6 3.4 3.7-.6-1.7 3 3 1.6-3.3 1.6 1 3.3-3.6-1-1 3.3-1.6-2.6V22h-1v-4.6l-1.6 2.6-1-3.3-3.6 1 1-3.3L3 12.8 6 11.2 4.3 8.2l3.7.6-.6-3.4 3 1.4z"/></svg></span>
+    <span class="leaf" style="--r:-50deg;top:96px;right:16%"><svg width="22" height="22" viewBox="0 0 24 24"><path fill="var(--moss)" d="M12 2l1.6 3.8 3-1.4-.6 3.4 3.7-.6-1.7 3 3 1.6-3.3 1.6 1 3.3-3.6-1-1 3.3-1.6-2.6V22h-1v-4.6l-1.6 2.6-1-3.3-3.6 1 1-3.3L3 12.8 6 11.2 4.3 8.2l3.7.6-.6-3.4 3 1.4z"/></svg></span>
+    <div class="eyebrow">Vocabulary · Gap fill</div>
+    <h1>Taste in the age of <em>slop</em></h1>
+    <p class="lede">Tap a gap, then tap the phrase that fits. Tap a filled gap to clear it. Each phrase is used once.</p>
+  </header>
+
+  <div class="bank">
+    <div class="bank-label"><span>Word bank</span><span id="left">12 left</span></div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <ol class="items" id="items"></ol>
+
+  <div class="actions">
+    <button class="btn primary" id="check" type="button">Check answers</button>
+    <button class="btn" id="show" type="button">Show answers</button>
+    <button class="btn" id="reset" type="button">Start again</button>
+    <div class="score" id="score" hidden></div>
+  </div>
+  <p class="hint">Tip: if no gap is selected, a phrase goes into the first empty gap.</p>
+</div>
+
+<script>
+(function(){
+  var DATA = [
+    ["In the age of AI, many writers repeat one idea: ", "the antidote to slop is taste", ". When anyone can generate content in seconds, judgment becomes the rare skill."],
+    ["When AI images first went viral, ", "It flooded our feeds", ", and within weeks every timeline looked the same."],
+    ["Good editors show real ", "discernment", ": they know what to cut, not only what to keep."],
+    ["Some people think taste is ", "Inborn", ", but most designers say it is trained through years of looking closely."],
+    ["Recruiters increasingly see good judgment as ", "a prerequisite for professional success", " rather than a nice extra."],
+    ["The career coach opened her talk with one question: ", "how can a person make him or herself indispensable", " when machines handle the routine work?"],
+    ["The landing page used six fonts and neon gradients, and most visitors found it ", "aesthetically off-putting", "."],
+    ["Generic, mass-produced content is the ", "bottom shelf", " of the internet: easy to reach, but few people want it."],
+    ["If every brand uses the same templates, nobody stands out, so founders are told to ", "Stay differentiated", " with a recognisable voice."],
+    ["", "Cookie-cutter taste", " (the same beige interiors, the same viral recipes) makes every home feed look identical."],
+    ["A strong product team knows how to ", "Incorporate design tastefully", ", so details feel natural rather than decorative."],
+    ["Faced with tools that write and draw in seconds, some illustrators have begun to ", "contemplate the prospect of their own obsolescence", "."]
+  ];
+  var bankOrder = DATA.map(function(_,i){return i});
+  for (var i=bankOrder.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=bankOrder[i];bankOrder[i]=bankOrder[j];bankOrder[j]=t;}
+
+  var chipsEl=document.getElementById('chips'), itemsEl=document.getElementById('items'),
+      leftEl=document.getElementById('left'), scoreEl=document.getElementById('score');
+  var gaps=[], chips=[], fills=new Array(DATA.length).fill(null), active=null, checked=false;
+
+  DATA.forEach(function(d,i){
+    var li=document.createElement('li');
+    var s=document.createElement('div'); s.className='sent';
+    s.appendChild(document.createTextNode(d[0]));
+    var g=document.createElement('button'); g.type='button'; g.className='gap'; g.id='gap'+i;
+    g.setAttribute('aria-label','Gap '+(i+1));
+    g.addEventListener('click',function(){onGap(i)});
+    s.appendChild(g); s.appendChild(document.createTextNode(d[2]));
+    li.appendChild(s);
+    var f=document.createElement('div'); f.className='fix'; f.hidden=true; li.appendChild(f);
+    itemsEl.appendChild(li); gaps.push(g);
+  });
+  bankOrder.forEach(function(k){
+    var c=document.createElement('button'); c.type='button'; c.className='chip'; c.id='chip'+k;
+    c.textContent=DATA[k][1]; c.addEventListener('click',function(){onChip(k)});
+    chipsEl.appendChild(c); chips[k]=c;
+  });
+
+  function clearMarks(){
+    if(!checked) return; checked=false; scoreEl.hidden=true;
+    gaps.forEach(function(g){g.classList.remove('ok','bad'); g.parentNode.nextSibling.hidden=true;});
+  }
+  function setActive(i){
+    if(active!==null) gaps[active].classList.remove('active');
+    active=i; if(i!==null) gaps[i].classList.add('active');
+  }
+  function onGap(i){
+    clearMarks();
+    if(fills[i]!==null){ chips[fills[i]].classList.remove('used'); fills[i]=null; gaps[i].textContent=''; setActive(i); update(); return; }
+    setActive(active===i?null:i);
+  }
+  function onChip(k){
+    if(fills.indexOf(k)!==-1) return;
+    clearMarks();
+    var target=active!==null?active:fills.indexOf(null);
+    if(target===-1) return;
+    if(fills[target]!==null) chips[fills[target]].classList.remove('used');
+    fills[target]=k; gaps[target].textContent=DATA[k][1]; chips[k].classList.add('used');
+    var next=null; for(var n=1;n<=DATA.length;n++){var x=(target+n)%DATA.length; if(fills[x]===null){next=x;break;}}
+    setActive(active!==null?next:null); update();
+  }
+  function update(){ var left=fills.filter(function(f){return f===null}).length; leftEl.textContent=left+' left'; }
+
+  document.getElementById('check').addEventListener('click',function(){
+    setActive(null); checked=true; var right=0;
+    gaps.forEach(function(g,i){
+      var fix=g.parentNode.nextSibling; fix.hidden=true;
+      if(fills[i]===i){g.classList.add('ok');g.classList.remove('bad');right++;}
+      else{g.classList.add('bad');g.classList.remove('ok');
+        if(fills[i]!==null){fix.textContent='Correct: '+DATA[i][1]; fix.hidden=false;}}
+    });
+    scoreEl.innerHTML=right+' / '+DATA.length+'<small>'+(right===DATA.length?'Perfect harvest':right>=8?'Nearly there':'Keep going')+'</small>';
+    scoreEl.hidden=false;
+  });
+  document.getElementById('show').addEventListener('click',function(){
+    setActive(null); checked=false; scoreEl.hidden=true;
+    DATA.forEach(function(d,i){fills[i]=i; gaps[i].textContent=d[1]; gaps[i].classList.remove('bad'); gaps[i].classList.add('ok'); gaps[i].parentNode.nextSibling.hidden=true; chips[i].classList.add('used');});
+    update();
+  });
+  document.getElementById('reset').addEventListener('click',function(){
+    setActive(null); checked=false; scoreEl.hidden=true;
+    fills=fills.map(function(){return null});
+    gaps.forEach(function(g){g.textContent='';g.classList.remove('ok','bad');g.parentNode.nextSibling.hidden=true;});
+    chips.forEach(function(c){c.classList.remove('used')});
+    update(); setActive(0);
+  });
+  setActive(0); update();
+})();
+</script>
+</body></html>

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<link rel="icon" href="/icon"><link rel="apple-touch-icon" href="/icon">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Join the board · Speak&amp;Teach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Caveat:wght@500;700&family=Unbounded:wght@300;400;500;600&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/static/app.css">
+<style>
+  .wrap{min-height:100%;display:grid;place-items:center;padding:24px 16px}
+  .box{width:100%;max-width:380px;display:flex;flex-direction:column;gap:18px}
+  h1{font-size:24px;overflow-wrap:anywhere}
+  .card{display:flex;flex-direction:column;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;box-shadow:var(--shadow)}
+  label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted)}
+  input{color:var(--ink);font-size:16px;padding:9px 11px}
+  .err{color:var(--bad);font-size:13px;min-height:1.2em;margin:0}
+  .btn{padding:10px;justify-content:center}
+  .wait{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+  .spin{width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  /* brand hero: light-leak gradient with film grain, glass card */
+  html,body{background:var(--grain),var(--tpage,linear-gradient(115deg,#DCDDC6 0%,#EEE7D0 38%,#F4E7C4 64%,#F8D270 100%)) fixed}
+  .wrap{min-height:100%}
+  h1{font-family:var(--display);font-weight:300;font-size:clamp(30px,7vw,44px);letter-spacing:-.035em;line-height:1}
+  .box>div:first-child .label{color:#6F7559}
+  .card{background:rgba(255,253,247,.62)!important;-webkit-backdrop-filter:blur(18px) saturate(1.2);backdrop-filter:blur(18px) saturate(1.2);border:1px solid rgba(255,255,255,.7)!important;border-radius:22px!important;box-shadow:0 30px 60px -30px rgba(120,95,30,.45)!important}
+  input{background:rgba(255,255,255,.8)}
+  details summary{color:#6F7559}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="box">
+    <div><div class="label">Join the board</div><h1 id="title">Speak&amp;Teach</h1></div>
+    <form class="card" id="f" hidden>
+      <p style="margin:0" id="lead">Write your name so the teacher knows who you are.</p>
+      <label id="nameL"><span id="nameT">Your name</span><input id="first" autocomplete="name" required maxlength="80"></label>
+      <label id="lastL" hidden>Last name<input id="last" autocomplete="family-name" maxlength="60"></label>
+      <label id="loginL" hidden>Login<input id="login" autocomplete="username" maxlength="40" autocapitalize="off" spellcheck="false"></label>
+      <label id="accpwL" hidden>Password<input id="accpw" type="password" autocomplete="new-password" maxlength="200"></label>
+      <p class="small" id="loginHint" hidden style="margin:0"><a href="#" id="haveAcc">I already have a login</a></p>
+      <label id="pwL" hidden>Board password<input id="bpw" type="password" autocomplete="off" maxlength="100"></label>
+      <label id="consentL" hidden style="flex-direction:row;align-items:flex-start;gap:8px;color:var(--ink);font-size:13px"><input type="checkbox" id="consent" style="margin-top:3px;width:auto"><span id="consentT"></span></label>
+      <p class="err" id="err" role="alert"></p>
+      <button class="btn primary" id="go" type="submit">Join</button>
+    </form>
+    <div class="card" id="wait" hidden>
+      <p style="margin:0"><span id="waitName">Y</span>our request is with the teacher. This page opens the board as soon as they let you in — you can also close it and open the link later.</p>
+      <div class="wait"><span class="spin"></span><span>Waiting…</span></div>
+    </div>
+    <div class="card" id="closed" hidden>
+      <p style="margin:0" id="closedText">The lesson on this board hasn't started yet. Sign in with your account to open it.</p>
+      <a class="btn primary" href="/">Sign in</a>
+    </div>
+    <p class="small muted" id="acct" hidden>You are signed in, but this board isn't shared with you. You can join it as a guest or <a href="/">go to your lessons</a>.</p>
+  </div>
+</div>
+<script src="/static/common.js"></script>
+<script>
+(async function () {
+  var bid = location.pathname.split('/').pop(), qs = new URLSearchParams(location.search), invite = qs.get('invite') || '', guestTok = qs.get('guest') || '', timer = null;
+  var info, q = [];
+  if (invite) q.push('invite=' + encodeURIComponent(invite)); if (guestTok) q.push('guest=' + encodeURIComponent(guestTok));
+  try { info = await api('GET', '/api/guest/info/' + bid + (q.length ? '?' + q.join('&') : '')); } catch (e) { $('#title').textContent = e.message; return; }
+  $('#title').textContent = info.title;
+  if (info.pw) { $('#pwL').hidden = false; $('#bpw').required = true; }
+  $('#acct').hidden = !info.signedIn || info.mode === 'student';
+  if (info.mode === 'student') return studentMode();
+  function show(id) { ['f', 'wait', 'closed'].forEach(function (x) { $('#' + x).hidden = x !== id; }); }
+  try { var saved = JSON.parse(localStorage.getItem('klass.guest') || '{}'); if (saved.name || saved.first) { $('#first').value = saved.name || ((saved.first || '') + ' ' + (saved.last || '')).trim(); } } catch (e) {}
+  // уже ждём подтверждения?
+  try { var st = await api('GET', '/api/guest/status'); if (st.ok) return location.reload(); if (st.wait) { show('wait'); poll(); return; } } catch (e) {}
+  if (info.invite && !info.approve) { $('#lead').textContent = 'You were invited to this board. Write your name and join.'; show('f'); }
+  else if (info.teacherHere) { $('#lead').textContent = 'The lesson is on. Write your name — the teacher will let you in.'; show('f'); }
+  else show('closed');
+  $('#f').addEventListener('submit', async function (e) {
+    e.preventDefault(); $('#err').textContent = ''; $('#go').disabled = true;
+    try { localStorage.setItem('klass.guest', JSON.stringify({ name: $('#first').value })); } catch (err) {}
+    try {
+      var r = await api('POST', '/api/guest/join', { boardId: bid, guest: guestTok, invite: invite, name: $('#first').value, password: $('#bpw').value });
+      if (r.ok) return location.reload();
+      if (r.needLogin) { show('closed'); return; }
+      if (r.wait) { show('wait'); poll(); }
+    } catch (err) { $('#err').textContent = err.message; $('#go').disabled = false; }
+  });
+  // основной сервер: ученик по ссылке оставляет заявку, учитель принимает — и он ученик этой доски
+  async function studentMode() {
+    if (info.studentsOnly) {
+      if (info.me) { $('#closedText').textContent = 'This board is only for the teacher’s students.'; show('closed'); return; }
+      info.auto = false; info.consent = info.consent || '';
+    }
+    if (info.consent) { $('#consentL').hidden = false; $('#consentT').innerHTML = consentHtml(info.consent); $('#consent').required = true; }
+    try { var js = await api('GET', '/api/board/join-status/' + bid); if (js.ok) return location.reload(); if (js.wait) { $('#waitName').textContent = js.name ? js.name + ', y' : 'Y'; show('wait'); spoll(); return; } } catch (e) {}
+    if (info.me) { $('#nameL').hidden = true; $('#first').required = false; $('#lead').textContent = info.me + ', ask the teacher to open this board for you.'; $('#go').textContent = 'Ask to join'; }
+    else {
+      var reg = !info.studentsOnly;
+      $('#nameT').textContent = 'First name'; $('#lastL').hidden = false; $('#last').required = true; $('#loginL').hidden = false; $('#accpwL').hidden = false; $('#loginHint').hidden = false; $('#login').required = true; $('#accpw').required = true;
+      var leadReg = info.auto ? 'Write your name and choose a login and password — you join the board right away. Next time sign in with them, or just open this link.' : 'Write your name and choose a login and password. The teacher will let you in — after that sign in with them, or just open this link.';
+      $('#lead').textContent = leadReg;
+      if (info.studentsOnly) {
+        $('#nameL').hidden = true; $('#lastL').hidden = true; $('#first').required = false; $('#last').required = false;
+        $('#accpw').autocomplete = 'current-password'; $('#haveAcc').hidden = true; $('#lead').textContent = 'This board is only for the teacher’s students. Enter your login and password.'; $('#go').textContent = 'Sign in';
+      }
+      $('#haveAcc').addEventListener('click', function (e) {
+        e.preventDefault(); reg = !reg;
+        $('#nameL').hidden = !reg; $('#lastL').hidden = !reg; $('#first').required = reg; $('#last').required = reg;
+        $('#accpw').autocomplete = reg ? 'new-password' : 'current-password';
+        $('#haveAcc').textContent = reg ? 'I already have a login' : 'I am new — register';
+        $('#lead').textContent = reg ? leadReg : 'Enter your login and password.'; $('#go').textContent = reg ? 'Join' : 'Sign in';
+      });
+    }
+    show('f');
+    $('#f').addEventListener('submit', async function (e) {
+      e.preventDefault(); $('#err').textContent = ''; $('#go').disabled = true;
+      try {
+        var r = await api('POST', '/api/board/join', { boardId: bid, invite: invite, name: ($('#first').value + ' ' + $('#last').value).trim(), login: $('#login').value, pw: $('#accpw').value, boardPassword: $('#bpw').value, consent: $('#consent').checked });
+        if (r.ok) return location.reload();
+        show('wait'); spoll();
+      } catch (err) { $('#err').textContent = err.message; $('#go').disabled = false; }
+    });
+  }
+  function spoll() {
+    clearInterval(timer);
+    timer = setInterval(async function () {
+      var r; try { r = await api('GET', '/api/board/join-status/' + bid); } catch (e) { return; }
+      if (r.ok) { clearInterval(timer); location.reload(); }
+      else if (r.denied) { clearInterval(timer); $('#closedText').textContent = 'The teacher did not let you in. Ask them if this is a mistake.'; show('closed'); }
+    }, 2500);
+  }
+  function poll() {
+    clearInterval(timer);
+    timer = setInterval(async function () {
+      var r; try { r = await api('GET', '/api/guest/status'); } catch (e) { return; }
+      if (r.ok) { clearInterval(timer); location.reload(); }
+      else if (r.denied) { clearInterval(timer); $('#closedText').textContent = 'The teacher did not let you in this time.'; show('closed'); }
+      else if (r.none) { clearInterval(timer); show('f'); $('#go').disabled = false; }
+    }, 2000);
+  }
+})();
+</script>
+</body>
+</html>
